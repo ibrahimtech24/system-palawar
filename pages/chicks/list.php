@@ -11,11 +11,14 @@ $pageTitle = 'لیستی جوجکەکان';
 $status = isset($_GET['status']) ? $_GET['status'] : '';
 
 // Build query
-$sql = "SELECT * FROM chicks WHERE 1=1";
+$sql = "SELECT c.*, e.quantity as egg_quantity, e.collection_date as egg_date 
+        FROM chicks c 
+        LEFT JOIN eggs e ON c.egg_id = e.id 
+        WHERE 1=1";
 if ($status) {
-    $sql .= " AND status = :status";
+    $sql .= " AND c.status = :status";
 }
-$sql .= " ORDER BY hatch_date DESC";
+$sql .= " ORDER BY c.hatch_date DESC";
 
 $db->query($sql);
 if ($status) {
@@ -142,7 +145,7 @@ require_once $basePath . 'includes/header.php';
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>ناوی گرووپ</th>
+                        <th>گرووپی هێلکە</th>
                         <th>ژمارە</th>
                         <th>زیندوو</th>
                         <th>مردوو</th>
@@ -155,7 +158,16 @@ require_once $basePath . 'includes/header.php';
                     <?php foreach ($chicks as $index => $chick): ?>
                     <tr>
                         <td><?php echo $index + 1; ?></td>
-                        <td><strong><?php echo $chick['batch_name']; ?></strong></td>
+                        <td>
+                            <strong>
+                                <?php if ($chick['egg_id']): ?>
+                                    هێلکە #<?php echo $chick['egg_id']; ?>
+                                    <small class="text-muted d-block"><?php echo $chick['egg_quantity']; ?> دانە - <?php echo $chick['egg_date']; ?></small>
+                                <?php else: ?>
+                                    <span class="text-muted">نادیار</span>
+                                <?php endif; ?>
+                            </strong>
+                        </td>
                         <td><?php echo $chick['quantity']; ?></td>
                         <td><span class="text-success"><?php echo $chick['quantity'] - $chick['dead_count']; ?></span></td>
                         <td><span class="text-danger"><?php echo $chick['dead_count']; ?></span></td>
@@ -166,9 +178,9 @@ require_once $basePath . 'includes/header.php';
                                 <a href="edit.php?id=<?php echo $chick['id']; ?>" class="btn btn-sm btn-outline-primary" title="دەستکاری">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button onclick="confirmDelete(<?php echo $chick['id']; ?>, '<?php echo $chick['batch_name']; ?>')" class="btn btn-sm btn-outline-danger" title="سڕینەوە">
+                                <a href="delete.php?id=<?php echo $chick['id']; ?>" onclick="return confirm('ئایا دڵنیایت لە سڕینەوەی ئەم تۆمارە؟')" class="btn btn-sm btn-outline-danger" title="سڕینەوە">
                                     <i class="fas fa-trash"></i>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -188,33 +200,5 @@ require_once $basePath . 'includes/header.php';
         <?php endif; ?>
     </div>
 </div>
-
-<!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> دڵنیابوونەوە</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <p>ئایا دڵنیایت لە سڕینەوەی ئەم گرووپە؟</p>
-                <p class="fw-bold text-danger" id="deleteItemName"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">نەخێر</button>
-                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">بەڵێ، بیسڕەوە</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function confirmDelete(id, name) {
-    document.getElementById('deleteItemName').textContent = name;
-    document.getElementById('confirmDeleteBtn').href = 'delete.php?id=' + id;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
-</script>
 
 <?php require_once $basePath . 'includes/footer.php'; ?>

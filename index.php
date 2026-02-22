@@ -88,51 +88,83 @@ require_once 'includes/header.php';
 <style>
 .datetime-display {
     display: flex;
-    gap: 15px;
+    gap: 18px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .date-box, .time-box {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    padding: 14px 24px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 1.15rem;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.date-box::before, .time-box::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
 }
 
 .time-box {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
-    min-width: 140px;
+    background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+    box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
+    min-width: 150px;
     font-family: 'Courier New', monospace;
-    font-size: 1.2rem;
-    letter-spacing: 2px;
+    font-size: 1.3rem;
+    letter-spacing: 3px;
 }
 
 .date-box i, .time-box i {
-    font-size: 1rem;
-    opacity: 0.9;
+    font-size: 1.1rem;
+    opacity: 0.95;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
+    .page-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .datetime-display {
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
     .datetime-display {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
+        width: 100%;
     }
     
     .date-box, .time-box {
-        padding: 10px 15px;
-        font-size: 0.95rem;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        width: 100%;
+        justify-content: center;
     }
     
     .time-box {
-        font-size: 1rem;
-        min-width: 120px;
+        font-size: 0.95rem;
+        min-width: auto;
+    }
+    
+    .date-box i, .time-box i {
+        font-size: 0.85rem;
     }
 }
 </style>

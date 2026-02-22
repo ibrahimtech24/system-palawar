@@ -64,8 +64,87 @@ $db->query("SELECT c.name, SUM(s.total_price) as total
 $db->bind(':date', $selectedDate);
 $topCustomers = $db->resultSet();
 
+// All sales this month
+$db->query("SELECT s.*, c.name as customer_name 
+            FROM sales s 
+            LEFT JOIN customers c ON s.customer_id = c.id 
+            WHERE DATE_FORMAT(s.sale_date, '%Y-%m') = :date 
+            ORDER BY s.sale_date DESC");
+$db->bind(':date', $selectedDate);
+$allSales = $db->resultSet();
+
+// All purchases this month
+$db->query("SELECT * FROM purchases 
+            WHERE DATE_FORMAT(purchase_date, '%Y-%m') = :date 
+            ORDER BY purchase_date DESC");
+$db->bind(':date', $selectedDate);
+$allPurchases = $db->resultSet();
+
+// Male birds this month
+$db->query("SELECT * FROM male_birds WHERE DATE_FORMAT(entry_date, '%Y-%m') = :date ORDER BY entry_date DESC");
+$db->bind(':date', $selectedDate);
+$maleBirds = $db->resultSet();
+$totalMaleBirds = array_sum(array_column($maleBirds, 'quantity'));
+
+// Female birds this month
+$db->query("SELECT * FROM female_birds WHERE DATE_FORMAT(entry_date, '%Y-%m') = :date ORDER BY entry_date DESC");
+$db->bind(':date', $selectedDate);
+$femaleBirds = $db->resultSet();
+$totalFemaleBirds = array_sum(array_column($femaleBirds, 'quantity'));
+
+// Transactions this month
+$db->query("SELECT * FROM transactions WHERE DATE_FORMAT(transaction_date, '%Y-%m') = :date ORDER BY transaction_date DESC");
+$db->bind(':date', $selectedDate);
+$transactions = $db->resultSet();
+
+$totalIncome = 0;
+$totalExpense = 0;
+foreach ($transactions as $trans) {
+    if ($trans['transaction_type'] == 'income') {
+        $totalIncome += $trans['amount'];
+    } else {
+        $totalExpense += $trans['amount'];
+    }
+}
+
+// Warehouse status
+$db->query("SELECT * FROM warehouse ORDER BY item_name");
+$warehouseItems = $db->resultSet();
+
 require_once $basePath . 'includes/header.php';
 ?>
+
+<style>
+/* Print styles for PDF */
+#reportContent {
+    background: white;
+    padding: 20px;
+}
+#reportContent .stat-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+#reportContent table {
+    font-size: 12px;
+}
+@media print {
+    .page-header, .card.mb-4:first-of-type {
+        display: none !important;
+    }
+    #reportContent {
+        padding: 0;
+    }
+    .card {
+        break-inside: avoid;
+    }
+}
+.bg-pink {
+    background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%) !important;
+    color: white;
+}
+</style>
 
 <!-- Page Header -->
 <div class="page-header">
@@ -79,6 +158,9 @@ require_once $basePath . 'includes/header.php';
         </nav>
     </div>
     <div class="d-flex gap-2">
+        <button onclick="printReport('reportContent')" class="btn btn-secondary">
+            <i class="fas fa-print"></i> چاپکردن
+        </button>
         <button onclick="exportToPDF('reportContent', 'monthly-report-<?php echo $selectedDate; ?>')" class="btn btn-danger">
             <i class="fas fa-file-pdf"></i> داگرتن بە PDF
         </button>
@@ -170,6 +252,57 @@ require_once $basePath . 'includes/header.php';
                 <div class="info">
                     <h3><?php echo number_format($chicksData['total'] ?? 0); ?></h3>
                     <p>جوجکەی دەرچوو</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Stats Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="icon bg-primary">
+                    <i class="fas fa-mars"></i>
+                </div>
+                <div class="info">
+                    <h3><?php echo number_format($totalMaleBirds); ?></h3>
+                    <p>هەوێردەی نێر</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="icon bg-pink">
+                    <i class="fas fa-venus"></i>
+                </div>
+                <div class="info">
+                    <h3><?php echo number_format($totalFemaleBirds); ?></h3>
+                    <p>هەوێردەی مێ</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="icon bg-success">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div class="info">
+                    <h3><?php echo formatMoney($totalIncome); ?></h3>
+                    <p>داهات</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="icon bg-danger">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <div class="info">
+                    <h3><?php echo formatMoney($totalExpense); ?></h3>
+                    <p>خەرجی</p>
                 </div>
             </div>
         </div>
@@ -305,6 +438,246 @@ require_once $basePath . 'includes/header.php';
                 </div>
             </div>
         </div>
+    </div>
+    
+    <!-- All Sales Table -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success-gradient">
+                    <i class="fas fa-shopping-cart"></i> لیستی فرۆشتنەکان (<?php echo count($allSales); ?>)
+                </div>
+                <div class="card-body">
+                    <?php if (count($allSales) > 0): ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>کۆد</th>
+                                    <th>کڕیار</th>
+                                    <th>جۆر</th>
+                                    <th>ژمارە</th>
+                                    <th>نرخی یەکە</th>
+                                    <th>کۆی گشتی</th>
+                                    <th>بەروار</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($allSales as $index => $sale): ?>
+                                <tr>
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td><?php echo $sale['sale_code']; ?></td>
+                                    <td><?php echo $sale['customer_name'] ?? 'نەناسراو'; ?></td>
+                                    <td><?php echo getItemTypeName($sale['item_type']); ?></td>
+                                    <td><?php echo number_format($sale['quantity']); ?></td>
+                                    <td><?php echo formatMoney($sale['unit_price']); ?></td>
+                                    <td><strong><?php echo formatMoney($sale['total_price']); ?></strong></td>
+                                    <td><?php echo $sale['sale_date']; ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-success">
+                                    <th colspan="6">کۆی گشتی فرۆشتن</th>
+                                    <th><?php echo formatMoney($salesData['total'] ?? 0); ?></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-cart"></i>
+                        <p>هیچ فرۆشتنێک لەم مانگەدا نیە</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- All Purchases Table -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger-gradient">
+                    <i class="fas fa-truck"></i> لیستی کڕینەکان (<?php echo count($allPurchases); ?>)
+                </div>
+                <div class="card-body">
+                    <?php if (count($allPurchases) > 0): ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>کۆد</th>
+                                    <th>جۆر</th>
+                                    <th>ژمارە</th>
+                                    <th>نرخی یەکە</th>
+                                    <th>کۆی گشتی</th>
+                                    <th>بەروار</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($allPurchases as $index => $purchase): ?>
+                                <tr>
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td><?php echo $purchase['purchase_code']; ?></td>
+                                    <td><?php echo $purchase['item_type']; ?></td>
+                                    <td><?php echo number_format($purchase['quantity']); ?></td>
+                                    <td><?php echo formatMoney($purchase['unit_price']); ?></td>
+                                    <td><strong><?php echo formatMoney($purchase['total_price']); ?></strong></td>
+                                    <td><?php echo $purchase['purchase_date']; ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-danger">
+                                    <th colspan="5">کۆی گشتی کڕین</th>
+                                    <th><?php echo formatMoney($purchasesData['total'] ?? 0); ?></th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fas fa-truck"></i>
+                        <p>هیچ کڕینێک لەم مانگەدا نیە</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Warehouse Status -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning-gradient">
+                    <i class="fas fa-warehouse"></i> بارودۆخی کۆگا
+                </div>
+                <div class="card-body">
+                    <?php if (count($warehouseItems) > 0): ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ناوی کاڵا</th>
+                                    <th>ژمارە</th>
+                                    <th>یەکە</th>
+                                    <th>نرخی یەکە</th>
+                                    <th>بەهای کۆ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $totalWarehouseValue = 0; ?>
+                                <?php foreach ($warehouseItems as $index => $item): ?>
+                                <?php $itemValue = $item['quantity'] * $item['unit_price']; $totalWarehouseValue += $itemValue; ?>
+                                <tr class="<?php echo $item['quantity'] <= $item['min_quantity'] ? 'table-warning' : ''; ?>">
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td><?php echo $item['item_name']; ?></td>
+                                    <td><?php echo number_format($item['quantity']); ?></td>
+                                    <td><?php echo $item['unit']; ?></td>
+                                    <td><?php echo formatMoney($item['unit_price']); ?></td>
+                                    <td><strong><?php echo formatMoney($itemValue); ?></strong></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-info">
+                                    <th colspan="5">کۆی بەهای کۆگا</th>
+                                    <th><?php echo formatMoney($totalWarehouseValue); ?></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fas fa-warehouse"></i>
+                        <p>کۆگا بەتاڵە</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Transactions -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info-gradient">
+                    <i class="fas fa-exchange-alt"></i> مامەڵەکان (<?php echo count($transactions); ?>)
+                </div>
+                <div class="card-body">
+                    <?php if (count($transactions) > 0): ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>جۆر</th>
+                                    <th>پۆل</th>
+                                    <th>بڕ</th>
+                                    <th>وەسف</th>
+                                    <th>بەروار</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($transactions as $index => $trans): ?>
+                                <tr>
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td>
+                                        <?php if ($trans['transaction_type'] == 'income'): ?>
+                                        <span class="badge bg-success"><i class="fas fa-arrow-down"></i> داهات</span>
+                                        <?php else: ?>
+                                        <span class="badge bg-danger"><i class="fas fa-arrow-up"></i> خەرجی</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo $trans['category']; ?></td>
+                                    <td><strong><?php echo formatMoney($trans['amount']); ?></strong></td>
+                                    <td><?php echo $trans['description']; ?></td>
+                                    <td><?php echo $trans['transaction_date']; ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-success">
+                                    <th colspan="3">کۆی داهات</th>
+                                    <th colspan="3"><?php echo formatMoney($totalIncome); ?></th>
+                                </tr>
+                                <tr class="table-danger">
+                                    <th colspan="3">کۆی خەرجی</th>
+                                    <th colspan="3"><?php echo formatMoney($totalExpense); ?></th>
+                                </tr>
+                                <tr class="<?php echo ($totalIncome - $totalExpense) >= 0 ? 'table-success' : 'table-danger'; ?>">
+                                    <th colspan="3">باڵانس</th>
+                                    <th colspan="3"><?php echo formatMoney($totalIncome - $totalExpense); ?></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fas fa-exchange-alt"></i>
+                        <p>هیچ مامەڵەیەک لەم مانگەدا نیە</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Footer -->
+    <div class="text-center mt-4 pt-4 border-top">
+        <p class="text-muted mb-0">
+            <strong><?php echo SITE_NAME; ?></strong> - راپۆرتی مانگی <?php echo date('F Y', mktime(0, 0, 0, $month, 1, $year)); ?>
+        </p>
+        <small class="text-muted">ئەم راپۆرتە لە بەرواری <?php echo date('Y/m/d'); ?> کاتژمێر <?php echo date('H:i'); ?> دروستکراوە</small>
     </div>
 </div>
 

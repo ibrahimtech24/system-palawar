@@ -10,22 +10,26 @@ $pageTitle = 'زیادکردنی جوجکە';
 $message = '';
 $messageType = '';
 
+// Fetch eggs for dropdown
+$db->query("SELECT * FROM eggs ORDER BY collection_date DESC");
+$eggs = $db->resultSet();
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $batch_name = $_POST['batch_name'] ?? '';
+    $egg_id = intval($_POST['egg_id'] ?? 0);
     $quantity = intval($_POST['quantity'] ?? 0);
     $dead_count = intval($_POST['dead_count'] ?? 0);
     $hatch_date = $_POST['hatch_date'] ?? date('Y-m-d');
     $status = $_POST['status'] ?? 'active';
     $notes = $_POST['notes'] ?? '';
     
-    if (empty($batch_name) || $quantity <= 0) {
+    if ($egg_id <= 0 || $quantity <= 0) {
         $message = 'تکایە هەموو خانەکان پڕ بکەوە';
         $messageType = 'danger';
     } else {
-        $db->query("INSERT INTO chicks (batch_name, quantity, dead_count, hatch_date, status, notes, created_at) 
-                    VALUES (:batch_name, :quantity, :dead_count, :hatch_date, :status, :notes, NOW())");
-        $db->bind(':batch_name', $batch_name);
+        $db->query("INSERT INTO chicks (egg_id, quantity, dead_count, hatch_date, status, notes, created_at) 
+                    VALUES (:egg_id, :quantity, :dead_count, :hatch_date, :status, :notes, NOW())");
+        $db->bind(':egg_id', $egg_id);
         $db->bind(':quantity', $quantity);
         $db->bind(':dead_count', $dead_count);
         $db->bind(':hatch_date', $hatch_date);
@@ -78,8 +82,16 @@ require_once $basePath . 'includes/header.php';
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">ناوی گرووپ <span class="text-danger">*</span></label>
-                            <input type="text" name="batch_name" class="form-control" placeholder="بۆ نموونە: گرووپ ١" required>
+                            <label class="form-label">گرووپی هێلکە <span class="text-danger">*</span></label>
+                            <select name="egg_id" class="form-select" required>
+                                <option value="">-- هەڵبژێرە --</option>
+                                <?php foreach ($eggs as $egg): ?>
+                                <option value="<?php echo $egg['id']; ?>">
+                                    هێلکە #<?php echo $egg['id']; ?> - <?php echo $egg['quantity']; ?> دانە (<?php echo $egg['collection_date']; ?>)
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted">ئەو هێلکانەی کە ئەم جوجکانە لێی دەرچووە</small>
                         </div>
                         
                         <div class="col-md-6">

@@ -28,7 +28,7 @@ if (!$sale) {
 <html lang="ku" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>وەسڵی فرۆشتن - <?php echo $sale['sale_code']; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
@@ -165,6 +165,92 @@ if (!$sale) {
             .receipt {
                 box-shadow: none;
                 border-radius: 0;
+            }
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .receipt-header {
+                padding: 20px 15px;
+            }
+            
+            .receipt-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .receipt-header p {
+                font-size: 0.9rem;
+            }
+            
+            .receipt-body {
+                padding: 20px 15px;
+            }
+            
+            .receipt-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .receipt-info-item {
+                text-align: center;
+                padding-bottom: 10px;
+                border-bottom: 1px dashed #eee;
+            }
+            
+            .receipt-info-item:last-child {
+                border-bottom: none;
+            }
+            
+            .receipt-table th,
+            .receipt-table td {
+                padding: 10px 8px;
+                font-size: 0.9rem;
+            }
+            
+            .receipt-total {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+                padding: 15px;
+            }
+            
+            .receipt-total .amount {
+                font-size: 1.5rem;
+            }
+            
+            .btn-actions {
+                flex-direction: column;
+            }
+            
+            .btn-actions .btn {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .receipt-header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .receipt-info-item p {
+                font-size: 1rem;
+            }
+            
+            .receipt-table {
+                font-size: 0.85rem;
+            }
+            
+            .receipt-table th,
+            .receipt-table td {
+                padding: 8px 5px;
+            }
+            
+            .receipt-total .amount {
+                font-size: 1.3rem;
             }
         }
     </style>

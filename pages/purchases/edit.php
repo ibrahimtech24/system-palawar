@@ -24,16 +24,11 @@ if (!$purchase) {
     exit;
 }
 
-// Get suppliers
-$db->query("SELECT id, name FROM suppliers ORDER BY name");
-$suppliers = $db->resultSet();
-
 $message = '';
 $messageType = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $supplier_id = !empty($_POST['supplier_id']) ? intval($_POST['supplier_id']) : null;
     $item_type = $_POST['item_type'] ?? '';
     $quantity = intval($_POST['quantity'] ?? 0);
     $unit_price = floatval($_POST['unit_price'] ?? 0);
@@ -45,10 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'تکایە هەموو خانەکان پڕ بکەوە';
         $messageType = 'danger';
     } else {
-        $db->query("UPDATE purchases SET supplier_id = :supplier_id, item_type = :item_type, quantity = :quantity, 
+        $db->query("UPDATE purchases SET item_type = :item_type, quantity = :quantity, 
                     unit_price = :unit_price, total_price = :total_price, purchase_date = :purchase_date, notes = :notes 
                     WHERE id = :id");
-        $db->bind(':supplier_id', $supplier_id);
         $db->bind(':item_type', $item_type);
         $db->bind(':quantity', $quantity);
         $db->bind(':unit_price', $unit_price);
@@ -102,16 +96,6 @@ require_once $basePath . 'includes/header.php';
             <div class="card-body">
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">دابینکەر</label>
-                            <select name="supplier_id" class="form-select">
-                                <option value="">هەڵبژێرە (ئارەزوومەندانە)</option>
-                                <?php foreach ($suppliers as $supplier): ?>
-                                <option value="<?php echo $supplier['id']; ?>" <?php echo $purchase['supplier_id'] == $supplier['id'] ? 'selected' : ''; ?>><?php echo $supplier['name']; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
                         <div class="col-md-6">
                             <label class="form-label">جۆری کالا <span class="text-danger">*</span></label>
                             <select name="item_type" class="form-select" required>

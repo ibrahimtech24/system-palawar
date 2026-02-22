@@ -7,17 +7,12 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'purchases';
 $pageTitle = 'کڕینی نوێ';
 
-// Get suppliers
-$db->query("SELECT id, name FROM suppliers ORDER BY name");
-$suppliers = $db->resultSet();
-
 $message = '';
 $messageType = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $purchase_code = generateCode('PUR');
-    $supplier_id = !empty($_POST['supplier_id']) ? intval($_POST['supplier_id']) : null;
     $item_type = $_POST['item_type'] ?? '';
     $quantity = intval($_POST['quantity'] ?? 0);
     $unit_price = floatval($_POST['unit_price'] ?? 0);
@@ -29,10 +24,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'تکایە هەموو خانەکان پڕ بکەوە';
         $messageType = 'danger';
     } else {
-        $db->query("INSERT INTO purchases (purchase_code, supplier_id, item_type, quantity, unit_price, total_price, purchase_date, notes, created_at) 
-                    VALUES (:purchase_code, :supplier_id, :item_type, :quantity, :unit_price, :total_price, :purchase_date, :notes, NOW())");
+        $db->query("INSERT INTO purchases (purchase_code, item_type, quantity, unit_price, total_price, purchase_date, notes, created_at) 
+                    VALUES (:purchase_code, :item_type, :quantity, :unit_price, :total_price, :purchase_date, :notes, NOW())");
         $db->bind(':purchase_code', $purchase_code);
-        $db->bind(':supplier_id', $supplier_id);
         $db->bind(':item_type', $item_type);
         $db->bind(':quantity', $quantity);
         $db->bind(':unit_price', $unit_price);
@@ -95,17 +89,7 @@ require_once $basePath . 'includes/header.php';
             <div class="card-body">
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">دابینکەر</label>
-                            <select name="supplier_id" class="form-select">
-                                <option value="">هەڵبژێرە (ئارەزوومەندانە)</option>
-                                <?php foreach ($suppliers as $supplier): ?>
-                                <option value="<?php echo $supplier['id']; ?>"><?php echo $supplier['name']; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label">جۆری کالا <span class="text-danger">*</span></label>
                             <select name="item_type" class="form-select" required>
                                 <option value="">هەڵبژێرە...</option>
@@ -122,23 +106,22 @@ require_once $basePath . 'includes/header.php';
                         
                         <div class="col-md-4">
                             <label class="form-label">ژمارە <span class="text-danger">*</span></label>
-                            <input type="number" name="quantity" id="quantity" class="form-control" min="1" required oninput="calculateTotal()">
+                            <input type="number" name="quantity" id="quantity" class="form-control form-control-lg" min="1" required onkeyup="doCalculate()" onchange="doCalculate()">
                         </div>
                         
                         <div class="col-md-4">
                             <label class="form-label">نرخی یەکە <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="text" id="unit_price_display" class="form-control" placeholder="0" required oninput="formatPrice(this); calculateTotal()">
-                                <input type="hidden" name="unit_price" id="unit_price" value="0">
+                            <div class="input-group input-group-lg">
+                                <input type="number" name="unit_price" id="unit_price" class="form-control" min="1" required onkeyup="doCalculate()" onchange="doCalculate()">
                                 <span class="input-group-text"><?php echo CURRENCY; ?></span>
                             </div>
                         </div>
                         
                         <div class="col-md-4">
                             <label class="form-label">کۆی نرخ</label>
-                            <div class="input-group">
-                                <input type="text" id="total_display" class="form-control" readonly>
-                                <span class="input-group-text"><?php echo CURRENCY; ?></span>
+                            <div class="input-group input-group-lg">
+                                <input type="text" id="total_display" class="form-control bg-warning text-dark fw-bold text-center" value="0" readonly style="font-size: 1.5rem;">
+                                <span class="input-group-text bg-warning text-dark"><?php echo CURRENCY; ?></span>
                             </div>
                         </div>
                         
@@ -170,26 +153,19 @@ require_once $basePath . 'includes/header.php';
 </div>
 
 <script>
+function doCalculate() {
+    var qty = Number(document.getElementById('quantity').value) || 0;
+    var price = Number(document.getElementById('unit_price').value) || 0;
+    var total = qty * price;
+    document.getElementById('total_display').value = total.toLocaleString('en-US');
+}
+
 function formatPrice(input) {
-    // Remove non-numeric characters except for digits
-    let value = input.value.replace(/[^\d]/g, '');
-    
-    // Convert to number and format with thousand separators
-    if (value) {
-        let num = parseInt(value);
-        document.getElementById('unit_price').value = num;
-        input.value = num.toLocaleString('en-US');
-    } else {
-        document.getElementById('unit_price').value = 0;
-        input.value = '';
-    }
+    doCalculate();
 }
 
 function calculateTotal() {
-    const qty = parseFloat(document.getElementById('quantity').value) || 0;
-    const price = parseFloat(document.getElementById('unit_price').value) || 0;
-    const total = qty * price;
-    document.getElementById('total_display').value = total.toLocaleString('en-US');
+    doCalculate();
 }
 </script>
 

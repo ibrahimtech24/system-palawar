@@ -82,7 +82,8 @@ class Database {
         
         CREATE TABLE IF NOT EXISTS chicks (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            batch_name VARCHAR(255) NOT NULL,
+            batch_name VARCHAR(255) DEFAULT '',
+            egg_id INT,
             quantity INT DEFAULT 0,
             dead_count INT DEFAULT 0,
             hatch_date DATE,
@@ -149,6 +150,20 @@ class Database {
         ";
         
         $this->conn->exec($sql);
+        
+        // Add egg_id column to chicks table if it doesn't exist
+        try {
+            $this->conn->exec("ALTER TABLE chicks ADD COLUMN egg_id INT AFTER batch_name");
+        } catch (PDOException $e) {
+            // Column already exists, ignore
+        }
+        
+        // Make batch_name allow default value
+        try {
+            $this->conn->exec("ALTER TABLE chicks MODIFY COLUMN batch_name VARCHAR(255) DEFAULT ''");
+        } catch (PDOException $e) {
+            // Already modified, ignore
+        }
     }
     
     public function query($sql) {

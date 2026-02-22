@@ -96,9 +96,9 @@ require_once $basePath . 'includes/header.php';
                             <a href="<?php echo $basePath; ?>pages/reports/customers.php?id=<?php echo $customer['id']; ?>" class="btn btn-sm btn-info btn-action" title="راپۆرت">
                                 <i class="fas fa-chart-bar"></i>
                             </a>
-                            <button onclick="confirmDelete('list.php?delete=<?php echo $customer['id']; ?>', '<?php echo $customer['name']; ?>')" class="btn btn-sm btn-danger btn-action" title="سڕینەوە">
+                            <a href="list.php?delete=<?php echo $customer['id']; ?>" onclick="return confirm('ئایا دڵنیایت لە سڕینەوەی ئەم کڕیارە؟')" class="btn btn-sm btn-danger btn-action" title="سڕینەوە">
                                 <i class="fas fa-trash"></i>
-                            </button>
+                            </a>
                         </td>
                     </tr>
                     <?php endforeach; ?>

@@ -7,11 +7,8 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'purchases';
 $pageTitle = 'کڕینەکان';
 
-// Get all purchases with supplier info
-$db->query("SELECT p.*, s.name as supplier_name 
-            FROM purchases p 
-            LEFT JOIN suppliers s ON p.supplier_id = s.id 
-            ORDER BY p.created_at DESC");
+// Get all purchases
+$db->query("SELECT * FROM purchases ORDER BY created_at DESC");
 $purchases = $db->resultSet();
 
 // Calculate totals
@@ -128,7 +125,6 @@ require_once $basePath . 'includes/header.php';
                     <tr>
                         <th>#</th>
                         <th>کۆدی کڕین</th>
-                        <th>دابینکەر</th>
                         <th>جۆری کالا</th>
                         <th>ژمارە</th>
                         <th>نرخی یەکە</th>
@@ -142,7 +138,6 @@ require_once $basePath . 'includes/header.php';
                     <tr>
                         <td><?php echo $index + 1; ?></td>
                         <td><span class="badge bg-secondary"><?php echo $purchase['purchase_code']; ?></span></td>
-                        <td><?php echo $purchase['supplier_name'] ?? '<span class="text-muted">نەناسراو</span>'; ?></td>
                         <td><?php echo getItemTypeName($purchase['item_type']); ?></td>
                         <td><?php echo number_format($purchase['quantity']); ?></td>
                         <td><?php echo number_format($purchase['unit_price']); ?> <?php echo CURRENCY; ?></td>

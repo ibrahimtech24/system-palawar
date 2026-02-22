@@ -133,9 +133,9 @@ require_once $basePath . 'includes/header.php';
                                 <a href="edit.php?id=<?php echo $egg['id']; ?>" class="btn btn-sm btn-outline-primary" title="دەستکاری">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button onclick="confirmDelete(<?php echo $egg['id']; ?>)" class="btn btn-sm btn-outline-danger" title="سڕینەوە">
+                                <a href="delete.php?id=<?php echo $egg['id']; ?>" onclick="return confirm('ئایا دڵنیایت لە سڕینەوەی ئەم تۆمارە؟')" class="btn btn-sm btn-outline-danger" title="سڕینەوە">
                                     <i class="fas fa-trash"></i>
-                                </button>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -155,31 +155,5 @@ require_once $basePath . 'includes/header.php';
         <?php endif; ?>
     </div>
 </div>
-
-<!-- Delete Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> دڵنیابوونەوە</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <p>ئایا دڵنیایت لە سڕینەوەی ئەم تۆمارە؟</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">نەخێر</button>
-                <a href="#" id="confirmDeleteBtn" class="btn btn-danger">بەڵێ، بیسڕەوە</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function confirmDelete(id) {
-    document.getElementById('confirmDeleteBtn').href = 'delete.php?id=' + id;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
-</script>
 
 <?php require_once $basePath . 'includes/footer.php'; ?>

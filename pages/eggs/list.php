@@ -7,10 +7,20 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'production';
 $pageTitle = 'لیستی هێلکەکان';
 
-// Get eggs with female bird info
-$db->query("SELECT e.*, f.batch_name as female_batch 
+// Check and add male_bird_id column if not exists
+$db->query("SHOW COLUMNS FROM eggs LIKE 'male_bird_id'");
+if (!$db->single()) {
+    $db->query("ALTER TABLE eggs ADD COLUMN male_bird_id INT NULL AFTER female_bird_id");
+    $db->execute();
+}
+
+// Get eggs with bird info
+// Only show eggs that have healthy eggs remaining (quantity - damaged_count > 0)
+$db->query("SELECT e.*, f.batch_name as female_batch, m.batch_name as male_batch 
             FROM eggs e 
             LEFT JOIN female_birds f ON e.female_bird_id = f.id 
+            LEFT JOIN male_birds m ON e.male_bird_id = m.id 
+            WHERE (e.quantity - e.damaged_count) > 0
             ORDER BY e.collection_date DESC");
 $eggs = $db->resultSet();
 
@@ -109,12 +119,12 @@ require_once $basePath . 'includes/header.php';
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>هەوێردەی مێ</th>
+                        <th><i class="fas fa-venus text-danger"></i> دایک</th>
+                        <th><i class="fas fa-mars text-primary"></i> باوک</th>
                         <th>ژمارە</th>
                         <th>ساغ</th>
                         <th>خراپ</th>
-                        <th>بەرواری کۆکردنەوە</th>
-                        <th>تێبینی</th>
+                        <th>بەروار</th>
                         <th>کردارەکان</th>
                     </tr>
                 </thead>
@@ -122,12 +132,24 @@ require_once $basePath . 'includes/header.php';
                     <?php foreach ($eggs as $index => $egg): ?>
                     <tr>
                         <td><?php echo $index + 1; ?></td>
-                        <td><?php echo $egg['female_batch'] ?: 'نەناسراو'; ?></td>
+                        <td>
+                            <?php if ($egg['female_batch']): ?>
+                                <span class="badge bg-danger-subtle text-danger"><?php echo $egg['female_batch']; ?></span>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <?php if ($egg['male_batch']): ?>
+                                <span class="badge bg-primary-subtle text-primary"><?php echo $egg['male_batch']; ?></span>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
+                        </td>
                         <td><strong><?php echo $egg['quantity']; ?></strong></td>
                         <td><span class="badge bg-success"><?php echo $egg['quantity'] - $egg['damaged_count']; ?></span></td>
                         <td><span class="badge bg-warning"><?php echo $egg['damaged_count']; ?></span></td>
                         <td><?php echo formatDate($egg['collection_date']); ?></td>
-                        <td><?php echo $egg['notes'] ?: '-'; ?></td>
                         <td>
                             <div class="btn-group">
                                 <a href="edit.php?id=<?php echo $egg['id']; ?>" class="btn btn-sm btn-outline-primary" title="دەستکاری">

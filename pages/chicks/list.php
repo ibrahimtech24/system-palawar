@@ -7,10 +7,22 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'production';
 $pageTitle = 'لیستی جوجکەکان';
 
-// Build query
-$sql = "SELECT c.*, e.quantity as egg_quantity, e.collection_date as egg_date 
+// Check and add male_bird_id column if not exists
+$db->query("SHOW COLUMNS FROM eggs LIKE 'male_bird_id'");
+if (!$db->single()) {
+    $db->query("ALTER TABLE eggs ADD COLUMN male_bird_id INT NULL AFTER female_bird_id");
+    $db->execute();
+}
+
+// Build query - join with eggs and birds to get parent info
+// Only show groups that have alive chicks (quantity - dead_count > 0) and not sold
+$sql = "SELECT c.*, e.quantity as egg_quantity, e.collection_date as egg_date,
+               f.batch_name as female_batch, m.batch_name as male_batch
         FROM chicks c 
         LEFT JOIN eggs e ON c.egg_id = e.id 
+        LEFT JOIN female_birds f ON e.female_bird_id = f.id
+        LEFT JOIN male_birds m ON e.male_bird_id = m.id
+        WHERE (c.quantity - c.dead_count) > 0 AND c.status != 'sold'
         ORDER BY c.hatch_date DESC";
 
 $db->query($sql);
@@ -111,7 +123,8 @@ require_once $basePath . 'includes/header.php';
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>گرووپی هێلکە</th>
+                        <th><i class="fas fa-venus text-danger"></i> دایک</th>
+                        <th><i class="fas fa-mars text-primary"></i> باوک</th>
                         <th>ژمارە</th>
                         <th>زیندوو</th>
                         <th>مردوو</th>
@@ -124,16 +137,20 @@ require_once $basePath . 'includes/header.php';
                     <tr>
                         <td><?php echo $index + 1; ?></td>
                         <td>
-                            <strong>
-                                <?php if ($chick['egg_id']): ?>
-                                    هێلکە #<?php echo $chick['egg_id']; ?>
-                                    <small class="text-muted d-block"><?php echo $chick['egg_quantity']; ?> دانە - <?php echo $chick['egg_date']; ?></small>
-                                <?php else: ?>
-                                    <span class="text-muted">نادیار</span>
-                                <?php endif; ?>
-                            </strong>
+                            <?php if (!empty($chick['female_batch'])): ?>
+                                <span class="badge bg-danger-subtle text-danger"><?php echo $chick['female_batch']; ?></span>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
                         </td>
-                        <td><?php echo $chick['quantity']; ?></td>
+                        <td>
+                            <?php if (!empty($chick['male_batch'])): ?>
+                                <span class="badge bg-primary-subtle text-primary"><?php echo $chick['male_batch']; ?></span>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
+                        </td>
+                        <td><strong><?php echo $chick['quantity']; ?></strong></td>
                         <td><span class="badge bg-success"><?php echo $chick['quantity'] - $chick['dead_count']; ?></span></td>
                         <td><span class="badge bg-danger"><?php echo $chick['dead_count']; ?></span></td>
                         <td><?php echo calculateAge($chick['hatch_date']); ?></td>

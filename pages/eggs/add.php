@@ -7,9 +7,20 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'production';
 $pageTitle = 'زیادکردنی هێلکە';
 
+// Check and add male_bird_id column if not exists
+$db->query("SHOW COLUMNS FROM eggs LIKE 'male_bird_id'");
+if (!$db->single()) {
+    $db->query("ALTER TABLE eggs ADD COLUMN male_bird_id INT NULL AFTER female_bird_id");
+    $db->execute();
+}
+
 // Get female birds for dropdown
-$db->query("SELECT id, batch_name FROM female_birds WHERE status IN ('active', 'laying') ORDER BY batch_name");
+$db->query("SELECT id, batch_name FROM female_birds WHERE status != 'dead' ORDER BY batch_name");
 $femaleBirds = $db->resultSet();
+
+// Get male birds for dropdown
+$db->query("SELECT id, batch_name FROM male_birds WHERE status != 'dead' ORDER BY batch_name");
+$maleBirds = $db->resultSet();
 
 $message = '';
 $messageType = '';
@@ -17,6 +28,7 @@ $messageType = '';
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $female_bird_id = !empty($_POST['female_bird_id']) ? intval($_POST['female_bird_id']) : null;
+    $male_bird_id = !empty($_POST['male_bird_id']) ? intval($_POST['male_bird_id']) : null;
     $quantity = intval($_POST['quantity'] ?? 0);
     $damaged_count = intval($_POST['damaged_count'] ?? 0);
     $collection_date = $_POST['collection_date'] ?? date('Y-m-d');
@@ -26,9 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'تکایە ژمارەی هێلکە بنووسە';
         $messageType = 'danger';
     } else {
-        $db->query("INSERT INTO eggs (female_bird_id, quantity, damaged_count, collection_date, notes, created_at) 
-                    VALUES (:female_bird_id, :quantity, :damaged_count, :collection_date, :notes, NOW())");
+        $db->query("INSERT INTO eggs (female_bird_id, male_bird_id, quantity, damaged_count, collection_date, notes, created_at) 
+                    VALUES (:female_bird_id, :male_bird_id, :quantity, :damaged_count, :collection_date, :notes, NOW())");
         $db->bind(':female_bird_id', $female_bird_id);
+        $db->bind(':male_bird_id', $male_bird_id);
         $db->bind(':quantity', $quantity);
         $db->bind(':damaged_count', $damaged_count);
         $db->bind(':collection_date', $collection_date);
@@ -80,13 +93,25 @@ require_once $basePath . 'includes/header.php';
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">هەوێردەی مێ</label>
+                            <label class="form-label"><i class="fas fa-venus text-danger"></i> گرووپی مێیەکان</label>
                             <select name="female_bird_id" class="form-select">
-                                <option value="">هەڵبژێرە (ئارەزوومەندانە)</option>
+                                <option value="">-- هەڵبژێرە --</option>
                                 <?php foreach ($femaleBirds as $bird): ?>
                                 <option value="<?php echo $bird['id']; ?>"><?php echo $bird['batch_name']; ?></option>
                                 <?php endforeach; ?>
                             </select>
+                            <small class="text-muted">گرووپی مێیەکان کە هێلکەیان کردووە</small>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label"><i class="fas fa-mars text-primary"></i> گرووپی نێرەکان</label>
+                            <select name="male_bird_id" class="form-select">
+                                <option value="">-- هەڵبژێرە --</option>
+                                <?php foreach ($maleBirds as $bird): ?>
+                                <option value="<?php echo $bird['id']; ?>"><?php echo $bird['batch_name']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted">گرووپی نێرەکان (باوک)</small>
                         </div>
                         
                         <div class="col-md-6">

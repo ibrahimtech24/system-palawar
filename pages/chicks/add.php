@@ -10,8 +10,19 @@ $pageTitle = 'زیادکردنی جوجکە';
 $message = '';
 $messageType = '';
 
-// Fetch eggs for dropdown
-$db->query("SELECT * FROM eggs ORDER BY collection_date DESC");
+// Check and add male_bird_id column if not exists
+$db->query("SHOW COLUMNS FROM eggs LIKE 'male_bird_id'");
+if (!$db->single()) {
+    $db->query("ALTER TABLE eggs ADD COLUMN male_bird_id INT NULL AFTER female_bird_id");
+    $db->execute();
+}
+
+// Fetch eggs with parent info for dropdown
+$db->query("SELECT e.*, f.batch_name as female_batch, m.batch_name as male_batch 
+            FROM eggs e 
+            LEFT JOIN female_birds f ON e.female_bird_id = f.id 
+            LEFT JOIN male_birds m ON e.male_bird_id = m.id 
+            ORDER BY e.collection_date DESC");
 $eggs = $db->resultSet();
 
 // Handle form submission
@@ -81,17 +92,22 @@ require_once $basePath . 'includes/header.php';
             <div class="card-body">
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-12">
                             <label class="form-label">گرووپی هێلکە <span class="text-danger">*</span></label>
                             <select name="egg_id" class="form-select" required>
                                 <option value="">-- هەڵبژێرە --</option>
-                                <?php foreach ($eggs as $egg): ?>
+                                <?php foreach ($eggs as $egg): 
+                                    $parentInfo = [];
+                                    if ($egg['female_batch']) $parentInfo[] = 'دایک: ' . $egg['female_batch'];
+                                    if ($egg['male_batch']) $parentInfo[] = 'باوک: ' . $egg['male_batch'];
+                                    $parentStr = !empty($parentInfo) ? ' [' . implode(' | ', $parentInfo) . ']' : '';
+                                ?>
                                 <option value="<?php echo $egg['id']; ?>">
-                                    هێلکە #<?php echo $egg['id']; ?> - <?php echo $egg['quantity']; ?> دانە (<?php echo $egg['collection_date']; ?>)
+                                    <?php echo $egg['quantity']; ?> هێلکە (<?php echo $egg['collection_date']; ?>)<?php echo $parentStr; ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
-                            <small class="text-muted">ئەو هێلکانەی کە ئەم جوجکانە لێی دەرچووە</small>
+                            <small class="text-muted">ئەو هێلکانەی کە ئەم جوجکانە لێی دەرچووە - باوک و دایک نیشان دراوە</small>
                         </div>
                         
                         <div class="col-md-6">

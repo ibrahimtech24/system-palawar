@@ -73,10 +73,83 @@ require_once 'includes/header.php';
             </ol>
         </nav>
     </div>
-    <div>
-        <span class="text-muted"><i class="fas fa-calendar"></i> <?php echo date('Y/m/d'); ?></span>
+    <div class="datetime-display">
+        <div class="date-box">
+            <i class="fas fa-calendar-alt"></i>
+            <span id="currentDate"><?php echo date('Y/m/d'); ?></span>
+        </div>
+        <div class="time-box">
+            <i class="fas fa-clock"></i>
+            <span id="currentTime">00:00:00</span>
+        </div>
     </div>
 </div>
+
+<style>
+.datetime-display {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.date-box, .time-box {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.time-box {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+    min-width: 140px;
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+}
+
+.date-box i, .time-box i {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .datetime-display {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .date-box, .time-box {
+        padding: 10px 15px;
+        font-size: 0.95rem;
+    }
+    
+    .time-box {
+        font-size: 1rem;
+        min-width: 120px;
+    }
+}
+</style>
+
+<script>
+function updateClock() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    document.getElementById('currentTime').textContent = hours + ':' + minutes + ':' + seconds;
+}
+
+// Update every second
+setInterval(updateClock, 1000);
+updateClock(); // Initial call
+</script>
 
 <!-- Statistics Cards -->
 <div class="row g-4 mb-4">
@@ -180,40 +253,7 @@ require_once 'includes/header.php';
     </div>
 </div>
 
-<!-- Quick Actions -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-bolt"></i> کردارە خێرەکان
-            </div>
-            <div class="card-body">
-                <div class="quick-actions">
-                    <a href="pages/sales/add.php" class="quick-action-btn">
-                        <i class="fas fa-plus-circle text-success"></i>
-                        <span>فرۆشتنی نوێ</span>
-                    </a>
-                    <a href="pages/purchases/add.php" class="quick-action-btn">
-                        <i class="fas fa-shopping-cart text-primary"></i>
-                        <span>کڕینی نوێ</span>
-                    </a>
-                    <a href="pages/eggs/add.php" class="quick-action-btn">
-                        <i class="fas fa-egg text-warning"></i>
-                        <span>زیادکردنی هێلکە</span>
-                    </a>
-                    <a href="pages/chicks/add.php" class="quick-action-btn">
-                        <i class="fas fa-kiwi-bird text-info"></i>
-                        <span>زیادکردنی جوجکە</span>
-                    </a>
-                    <a href="pages/reports/monthly.php" class="quick-action-btn">
-                        <i class="fas fa-chart-bar text-danger"></i>
-                        <span>راپۆرتی مانگانە</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <div class="row g-4">
     <!-- Sales Chart -->

@@ -1,3 +1,17 @@
+<?php
+// Start session and check authentication
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Check if user is logged in
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    $rootPath = isset($basePath) ? $basePath : '';
+    header('Location: ' . $rootPath . 'login.php');
+    exit;
+}
+$bp = isset($basePath) ? $basePath : '';
+?>
 <!DOCTYPE html>
 <html lang="ku" dir="rtl">
 <head>
@@ -12,134 +26,260 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Chart.js -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="<?php echo isset($basePath) ? $basePath : ''; ?>css/style.css">
+    <link rel="stylesheet" href="<?php echo $bp; ?>css/style.css">
+    
+    <style>
+        /* Navbar Improvements */
+        .navbar-custom {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+        }
+        
+        .navbar-custom .navbar-brand {
+            padding: 15px 20px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .navbar-custom .navbar-brand i {
+            color: #ffc107;
+        }
+        
+        .navbar-custom .nav-link {
+            padding: 18px 15px !important;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9) !important;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .navbar-custom .nav-link:hover,
+        .navbar-custom .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            border-bottom-color: #ffc107;
+            color: #fff !important;
+        }
+        
+        .navbar-custom .nav-link i {
+            margin-left: 5px;
+        }
+        
+        .navbar-custom .dropdown-menu {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            padding: 10px;
+            min-width: 200px;
+        }
+        
+        .navbar-custom .dropdown-item {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .navbar-custom .dropdown-item:hover {
+            background: #f0f7ff;
+            color: #1e3c72;
+        }
+        
+        .navbar-custom .dropdown-item i {
+            width: 20px;
+            margin-left: 8px;
+            color: #2a5298;
+        }
+        
+        .user-menu {
+            background: rgba(255,255,255,0.1);
+            border-radius: 50px;
+            padding: 5px 15px !important;
+            margin: 10px;
+        }
+        
+        .user-menu:hover {
+            background: rgba(255,255,255,0.2) !important;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 991px) {
+            .navbar-custom {
+                padding: 0;
+            }
+            
+            .navbar-custom .navbar-brand {
+                padding: 12px 15px;
+                font-size: 1.1rem;
+            }
+            
+            .navbar-custom .navbar-collapse {
+                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+                padding: 15px;
+                max-height: 80vh;
+                overflow-y: auto;
+            }
+            
+            .navbar-custom .nav-link {
+                padding: 12px 15px !important;
+                border-radius: 8px;
+                margin-bottom: 5px;
+                border-bottom: none;
+            }
+            
+            .navbar-custom .nav-link:hover,
+            .navbar-custom .nav-link.active {
+                background: rgba(255,255,255,0.15);
+            }
+            
+            .navbar-custom .dropdown-menu {
+                background: rgba(255,255,255,0.1);
+                box-shadow: none;
+                border-radius: 8px;
+                margin-top: 5px;
+                margin-bottom: 10px;
+            }
+            
+            .navbar-custom .dropdown-item {
+                color: rgba(255,255,255,0.9);
+            }
+            
+            .navbar-custom .dropdown-item:hover {
+                background: rgba(255,255,255,0.1);
+                color: #fff;
+            }
+            
+            .navbar-custom .dropdown-item i {
+                color: rgba(255,255,255,0.7);
+            }
+            
+            .user-menu {
+                margin: 10px 0;
+            }
+        }
+        
+        .navbar-toggler {
+            border: none;
+            padding: 10px;
+        }
+        
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="<?php echo isset($basePath) ? $basePath : ''; ?>index.php">
-                <i class="fas fa-feather-alt"></i>
-                <?php echo SITE_NAME; ?>
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container-fluid px-0">
+            <a class="navbar-brand" href="<?php echo $bp; ?>index.php">
+                <i class="fas fa-feather-alt"></i> <?php echo SITE_NAME; ?>
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
-            <div class="collapse navbar-collapse" id="navbarMain">
+            <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav me-auto">
+                    <!-- سەرەکی -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo ($currentPage ?? '') === 'home' ? 'active' : ''; ?>" href="<?php echo isset($basePath) ? $basePath : ''; ?>index.php">
+                        <a class="nav-link <?php echo ($currentPage ?? '') === 'home' ? 'active' : ''; ?>" href="<?php echo $bp; ?>index.php">
                             <i class="fas fa-home"></i> سەرەکی
                         </a>
                     </li>
                     
-                    <!-- مەخزەن Dropdown -->
+                    <!-- مەخزەن -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?php echo ($currentPage ?? '') === 'warehouse' ? 'active' : ''; ?>" href="#" data-bs-toggle="dropdown">
                             <i class="fas fa-warehouse"></i> مەخزەن
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/warehouse/list.php"><i class="fas fa-list"></i> لیستی کاڵاکان</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/warehouse/add.php"><i class="fas fa-plus"></i> زیادکردنی کاڵا</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/warehouse/list.php"><i class="fas fa-list"></i> لیست</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/warehouse/add.php"><i class="fas fa-plus"></i> زیادکردن</a></li>
                         </ul>
                     </li>
                     
-                    <!-- هەوێردەکان Dropdown -->
+                    <!-- هەوێردە -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?php echo ($currentPage ?? '') === 'birds' ? 'active' : ''; ?>" href="#" data-bs-toggle="dropdown">
                             <i class="fas fa-dove"></i> هەوێردە
                         </a>
                         <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header"><i class="fas fa-mars"></i> هەوێردەی نێر</h6></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/birds/male_list.php"><i class="fas fa-list"></i> لیستی نێرەکان</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/birds/add_male.php"><i class="fas fa-plus"></i> زیادکردنی نێر</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><h6 class="dropdown-header"><i class="fas fa-venus"></i> هەوێردەی مێ</h6></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/birds/female_list.php"><i class="fas fa-list"></i> لیستی مێیەکان</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/birds/add_female.php"><i class="fas fa-plus"></i> زیادکردنی مێ</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/birds/male_list.php"><i class="fas fa-mars"></i> نێرەکان</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/birds/female_list.php"><i class="fas fa-venus"></i> مێیەکان</a></li>
                         </ul>
                     </li>
                     
-                    <!-- هێلکە و جوجکە Dropdown -->
+                    <!-- هێلکە و جوجکە -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?php echo ($currentPage ?? '') === 'production' ? 'active' : ''; ?>" href="#" data-bs-toggle="dropdown">
-                            <i class="fas fa-egg"></i> هێلکە و جوجکە
+                            <i class="fas fa-egg"></i> بەرهەم
                         </a>
                         <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header"><i class="fas fa-egg"></i> هێلکە</h6></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/eggs/list.php"><i class="fas fa-list"></i> لیستی هێلکەکان</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/eggs/add.php"><i class="fas fa-plus"></i> زیادکردنی هێلکە</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><h6 class="dropdown-header"><i class="fas fa-kiwi-bird"></i> جوجکە</h6></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/chicks/list.php"><i class="fas fa-list"></i> لیستی جوجکەکان</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/chicks/add.php"><i class="fas fa-plus"></i> زیادکردنی جوجکە</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/eggs/list.php"><i class="fas fa-egg"></i> هێلکەکان</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/chicks/list.php"><i class="fas fa-kiwi-bird"></i> جوجکەکان</a></li>
                         </ul>
                     </li>
                     
-                    <!-- فرۆشتن و کڕین Dropdown -->
+                    <!-- فرۆشتن -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?php echo ($currentPage ?? '') === 'sales' ? 'active' : ''; ?>" href="#" data-bs-toggle="dropdown">
-                            <i class="fas fa-shopping-cart"></i> فرۆشتن و کڕین
+                            <i class="fas fa-shopping-cart"></i> فرۆشتن
                         </a>
                         <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header"><i class="fas fa-cash-register"></i> فرۆشتن</h6></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/sales/list.php"><i class="fas fa-list"></i> لیستی فرۆشتنەکان</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/sales/add.php"><i class="fas fa-plus"></i> فرۆشتنی نوێ</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><h6 class="dropdown-header"><i class="fas fa-truck"></i> کڕین</h6></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/purchases/list.php"><i class="fas fa-list"></i> لیستی کڕینەکان</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/purchases/add.php"><i class="fas fa-plus"></i> کڕینی نوێ</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/sales/list.php"><i class="fas fa-list"></i> لیست</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/sales/add.php"><i class="fas fa-plus"></i> فرۆشتنی نوێ</a></li>
                         </ul>
                     </li>
                     
-                    <!-- کڕیاران و دابینکەران -->
+                    <!-- کڕین -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle <?php echo ($currentPage ?? '') === 'purchases' ? 'active' : ''; ?>" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-truck"></i> کڕین
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/purchases/list.php"><i class="fas fa-list"></i> لیست</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/purchases/add.php"><i class="fas fa-plus"></i> کڕینی نوێ</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- کەسەکان -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
                             <i class="fas fa-users"></i> کەسەکان
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/customers/list.php"><i class="fas fa-user-tie"></i> کڕیاران</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/suppliers/list.php"><i class="fas fa-truck"></i> دابینکەران</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/customers/list.php"><i class="fas fa-user-tie"></i> کڕیاران</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/suppliers/list.php"><i class="fas fa-truck-loading"></i> دابینکەران</a></li>
                         </ul>
                     </li>
                     
-                    <!-- راپۆرتەکان Dropdown -->
+                    <!-- راپۆرت -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle <?php echo ($currentPage ?? '') === 'reports' ? 'active' : ''; ?>" href="#" data-bs-toggle="dropdown">
-                            <i class="fas fa-chart-bar"></i> راپۆرتەکان
+                            <i class="fas fa-chart-bar"></i> راپۆرت
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/reports/monthly.php"><i class="fas fa-calendar-alt"></i> راپۆرتی مانگانە</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/reports/sales.php"><i class="fas fa-chart-line"></i> راپۆرتی فرۆشتن</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/reports/inventory.php"><i class="fas fa-boxes"></i> راپۆرتی مەخزەن</a></li>
-                            <li><a class="dropdown-item" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/reports/customers.php"><i class="fas fa-users"></i> راپۆرتی کڕیاران</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/reports/monthly.php"><i class="fas fa-calendar-alt"></i> مانگانە</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/reports/sales.php"><i class="fas fa-chart-line"></i> فرۆشتن</a></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/transactions/list.php"><i class="fas fa-history"></i> مێژوو</a></li>
                         </ul>
-                    </li>
-                    
-                    <!-- مێژووی مامەڵەکان -->
-                    <li class="nav-item">
-                        <a class="nav-link <?php echo ($currentPage ?? '') === 'transactions' ? 'active' : ''; ?>" href="<?php echo isset($basePath) ? $basePath : ''; ?>pages/transactions/list.php">
-                            <i class="fas fa-history"></i> مێژوو
-                        </a>
                     </li>
                 </ul>
                 
-                <!-- Search and utilities -->
+                <!-- دەرچوون -->
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#searchModal">
-                            <i class="fas fa-search"></i>
+                        <a class="nav-link user-menu" href="<?php echo $bp; ?>logout.php" onclick="return confirm('دەرچوون؟');">
+                            <i class="fas fa-sign-out-alt"></i> دەرچوون
                         </a>
                     </li>
                 </ul>
@@ -147,27 +287,7 @@
         </div>
     </nav>
     
-    <!-- Search Modal -->
-    <div class="modal fade" id="searchModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-search"></i> گەڕان</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form action="<?php echo isset($basePath) ? $basePath : ''; ?>search.php" method="GET">
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="q" placeholder="گەڕان لە سیستەمدا...">
-                            <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Main Wrapper -->
+    <!-- Main Content -->
     <main class="main-content">
         <?php
         $message = getMessage();

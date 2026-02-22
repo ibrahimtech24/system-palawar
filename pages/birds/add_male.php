@@ -15,19 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $batch_name = $_POST['batch_name'] ?? '';
     $quantity = intval($_POST['quantity'] ?? 0);
     $entry_date = $_POST['entry_date'] ?? date('Y-m-d');
-    $status = $_POST['status'] ?? 'active';
     $notes = $_POST['notes'] ?? '';
     
     if (empty($batch_name) || $quantity <= 0) {
         $message = 'تکایە هەموو خانەکان پڕ بکەوە';
         $messageType = 'danger';
     } else {
-        $db->query("INSERT INTO male_birds (batch_name, quantity, entry_date, status, notes, created_at) 
-                    VALUES (:batch_name, :quantity, :entry_date, :status, :notes, NOW())");
+        $db->query("INSERT INTO male_birds (batch_name, quantity, entry_date, notes, created_at) 
+                    VALUES (:batch_name, :quantity, :entry_date, :notes, NOW())");
         $db->bind(':batch_name', $batch_name);
         $db->bind(':quantity', $quantity);
         $db->bind(':entry_date', $entry_date);
-        $db->bind(':status', $status);
         $db->bind(':notes', $notes);
         
         if ($db->execute()) {
@@ -88,15 +86,6 @@ require_once $basePath . 'includes/header.php';
                         <div class="col-md-6">
                             <label class="form-label">بەرواری هاتن <span class="text-danger">*</span></label>
                             <input type="date" name="entry_date" class="form-control" value="<?php echo date('Y-m-d'); ?>" required>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">بار</label>
-                            <select name="status" class="form-select">
-                                <option value="active">چالاک</option>
-                                <option value="sold">فرۆشراو</option>
-                                <option value="dead">مردوو</option>
-                            </select>
                         </div>
                         
                         <div class="col-12">

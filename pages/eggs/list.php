@@ -124,8 +124,8 @@ require_once $basePath . 'includes/header.php';
                         <td><?php echo $index + 1; ?></td>
                         <td><?php echo $egg['female_batch'] ?: 'نەناسراو'; ?></td>
                         <td><strong><?php echo $egg['quantity']; ?></strong></td>
-                        <td><span class="text-success"><?php echo $egg['quantity'] - $egg['damaged_count']; ?></span></td>
-                        <td><span class="text-danger"><?php echo $egg['damaged_count']; ?></span></td>
+                        <td><span class="badge bg-success"><?php echo $egg['quantity'] - $egg['damaged_count']; ?></span></td>
+                        <td><span class="badge bg-warning"><?php echo $egg['damaged_count']; ?></span></td>
                         <td><?php echo formatDate($egg['collection_date']); ?></td>
                         <td><?php echo $egg['notes'] ?: '-'; ?></td>
                         <td>

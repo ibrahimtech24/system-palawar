@@ -7,19 +7,29 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'birds';
 $pageTitle = 'لیستی هەوێردەی نێر';
 
+// Make sure dead_count column exists
+try {
+    $db->query("SHOW COLUMNS FROM male_birds LIKE 'dead_count'");
+    $result = $db->resultSet();
+    if (empty($result)) {
+        $db->query("ALTER TABLE male_birds ADD COLUMN dead_count INT DEFAULT 0");
+        $db->execute();
+    }
+} catch (Exception $e) {}
+
 // Get filter
-$status = isset($_GET['status']) ? $_GET['status'] : '';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Build query
-$sql = "SELECT * FROM male_birds WHERE 1=1";
-if ($status) {
-    $sql .= " AND status = :status";
+$sql = "SELECT *, IFNULL(dead_count, 0) as dead_count FROM male_birds WHERE 1=1";
+if ($search) {
+    $sql .= " AND batch_name LIKE :search";
 }
 $sql .= " ORDER BY created_at DESC";
 
 $db->query($sql);
-if ($status) {
-    $db->bind(':status', $status);
+if ($search) {
+    $db->bind(':search', '%' . $search . '%');
 }
 $birds = $db->resultSet();
 
@@ -63,17 +73,12 @@ require_once $basePath . 'includes/header.php';
     <div class="card-body">
         <form method="GET" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label class="form-label">بار</label>
-                <select name="status" class="form-select">
-                    <option value="">هەموو</option>
-                    <option value="active" <?php echo $status === 'active' ? 'selected' : ''; ?>>چالاک</option>
-                    <option value="sold" <?php echo $status === 'sold' ? 'selected' : ''; ?>>فرۆشراو</option>
-                    <option value="dead" <?php echo $status === 'dead' ? 'selected' : ''; ?>>مردوو</option>
-                </select>
+                <label class="form-label">گەڕان بە ناو</label>
+                <input type="text" name="search" class="form-control" placeholder="ناوی گرووپ..." value="<?php echo htmlspecialchars($search); ?>">
             </div>
             <div class="col-md-4">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-filter"></i> فلتەر
+                    <i class="fas fa-search"></i> گەڕان
                 </button>
                 <a href="male_list.php" class="btn btn-secondary">
                     <i class="fas fa-redo"></i> ڕیسێت
@@ -96,22 +101,24 @@ require_once $basePath . 'includes/header.php';
                     <tr>
                         <th>#</th>
                         <th>ناوی گرووپ</th>
-                        <th>ژمارە</th>
+                        <th>کۆی ژمارە</th>
+                        <th>زیندوو</th>
+                        <th>مردوو</th>
                         <th>تەمەن</th>
-                        <th>بار</th>
-                        <th>تێبینی</th>
                         <th>کردارەکان</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($birds as $index => $bird): ?>
+                    <?php foreach ($birds as $index => $bird): 
+                        $alive = $bird['quantity'] - $bird['dead_count'];
+                    ?>
                     <tr>
                         <td><?php echo $index + 1; ?></td>
                         <td><strong><?php echo $bird['batch_name']; ?></strong></td>
                         <td><?php echo $bird['quantity']; ?></td>
+                        <td><span class="badge bg-success"><?php echo $alive; ?></span></td>
+                        <td><span class="badge bg-danger"><?php echo $bird['dead_count']; ?></span></td>
                         <td><?php echo calculateAge($bird['entry_date']); ?></td>
-                        <td><?php echo getStatusBadge($bird['status']); ?></td>
-                        <td><?php echo $bird['notes'] ?: '-'; ?></td>
                         <td>
                             <div class="btn-group">
                                 <a href="edit_male.php?id=<?php echo $bird['id']; ?>" class="btn btn-sm btn-outline-primary" title="دەستکاری">

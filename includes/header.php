@@ -37,76 +37,129 @@ $bp = isset($basePath) ? $basePath : '';
     <style>
         /* Navbar Improvements */
         .navbar-custom {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: #ffffff;
             padding: 0;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border-bottom: 1px solid #f0f0f0;
         }
         
         .navbar-custom .navbar-brand {
-            padding: 15px 20px;
-            font-size: 1.3rem;
-            font-weight: 700;
-            background: rgba(0,0,0,0.1);
+            padding: 16px 24px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #1a1a2e !important;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .navbar-custom .navbar-brand i {
-            color: #ffc107;
+            color: #2563eb;
+            font-size: 1.5rem;
         }
         
         .navbar-custom .nav-link {
-            padding: 18px 15px !important;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: rgba(255,255,255,0.9) !important;
+            padding: 20px 18px !important;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #374151 !important;
             border-bottom: 3px solid transparent;
-            transition: all 0.3s;
+            transition: all 0.25s ease;
+            position: relative;
         }
         
-        .navbar-custom .nav-link:hover,
+        .navbar-custom .nav-link:hover {
+            background: linear-gradient(180deg, transparent 0%, #f8fafc 100%);
+            color: #1a1a2e !important;
+        }
+        
         .navbar-custom .nav-link.active {
-            background: rgba(255,255,255,0.1);
-            border-bottom-color: #ffc107;
-            color: #fff !important;
+            background: linear-gradient(180deg, transparent 0%, #eff6ff 100%);
+            color: #2563eb !important;
+            border-bottom-color: #2563eb;
         }
         
         .navbar-custom .nav-link i {
-            margin-left: 5px;
+            margin-left: 6px;
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
         
         .navbar-custom .dropdown-menu {
             border: none;
-            border-radius: 10px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-            padding: 10px;
-            min-width: 200px;
+            border-radius: 12px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.12);
+            padding: 12px;
+            min-width: 220px;
+            background: #ffffff;
+            animation: fadeInDown 0.2s ease;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .navbar-custom .dropdown-item {
-            padding: 10px 15px;
+            padding: 12px 16px;
             border-radius: 8px;
             font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
         }
         
         .navbar-custom .dropdown-item:hover {
             background: #f0f7ff;
-            color: #1e3c72;
+            color: #2563eb;
+            transform: translateX(-4px);
         }
         
         .navbar-custom .dropdown-item i {
-            width: 20px;
-            margin-left: 8px;
-            color: #2a5298;
+            width: 24px;
+            margin-left: 10px;
+            color: #6b7280;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+        
+        .navbar-custom .dropdown-item:hover i {
+            color: #2563eb;
         }
         
         .user-menu {
-            background: rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             border-radius: 50px;
-            padding: 5px 15px !important;
-            margin: 10px;
+            padding: 8px 20px !important;
+            margin: 10px 15px;
+            color: #dc2626 !important;
+            font-weight: 600;
+            border: none;
+            transition: all 0.25s ease;
+        }
+        
+        .user-menu i {
+            color: #dc2626 !important;
         }
         
         .user-menu:hover {
-            background: rgba(255,255,255,0.2) !important;
+            background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%) !important;
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+        }
+        
+        .dropdown-divider {
+            margin: 8px 0;
+            border-color: #f0f0f0;
         }
         
         /* Mobile Responsive */
@@ -116,70 +169,82 @@ $bp = isset($basePath) ? $basePath : '';
             }
             
             .navbar-custom .navbar-brand {
-                padding: 12px 15px;
-                font-size: 1.1rem;
+                padding: 14px 16px;
+                font-size: 1.2rem;
             }
             
             .navbar-custom .navbar-collapse {
-                background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-                padding: 15px;
-                max-height: 80vh;
+                background: #ffffff;
+                padding: 16px;
+                max-height: 85vh;
                 overflow-y: auto;
+                border-top: 1px solid #f0f0f0;
+                box-shadow: inset 0 5px 20px rgba(0,0,0,0.03);
             }
             
             .navbar-custom .nav-link {
-                padding: 12px 15px !important;
-                border-radius: 8px;
-                margin-bottom: 5px;
+                padding: 14px 16px !important;
+                border-radius: 10px;
+                margin-bottom: 4px;
                 border-bottom: none;
+                color: #374151 !important;
             }
             
             .navbar-custom .nav-link:hover,
             .navbar-custom .nav-link.active {
-                background: rgba(255,255,255,0.15);
+                background: #f0f7ff;
+                color: #2563eb !important;
             }
             
             .navbar-custom .dropdown-menu {
-                background: rgba(255,255,255,0.1);
+                background: #f8fafc;
                 box-shadow: none;
-                border-radius: 8px;
-                margin-top: 5px;
-                margin-bottom: 10px;
+                border-radius: 10px;
+                margin-top: 6px;
+                margin-bottom: 12px;
+                border: 1px solid #e5e7eb;
+                padding: 8px;
             }
             
             .navbar-custom .dropdown-item {
-                color: rgba(255,255,255,0.9);
+                color: #374151;
+                padding: 10px 14px;
             }
             
             .navbar-custom .dropdown-item:hover {
-                background: rgba(255,255,255,0.1);
-                color: #fff;
+                background: #ffffff;
+                color: #2563eb;
             }
             
             .navbar-custom .dropdown-item i {
-                color: rgba(255,255,255,0.7);
+                color: #6b7280;
             }
             
             .user-menu {
-                margin: 10px 0;
+                margin: 12px 0;
             }
         }
         
         .navbar-toggler {
             border: none;
-            padding: 10px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
+            padding: 10px 12px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+        
+        .navbar-toggler:hover {
+            background: #e5e7eb;
         }
         
         .navbar-toggler:focus {
             box-shadow: none;
-            background: rgba(255,255,255,0.2);
+            background: #e0e7ff;
         }
         
         .navbar-toggler-icon {
-            width: 1.2em;
-            height: 1.2em;
+            width: 1.3em;
+            height: 1.3em;
         }
         
         /* ===== COMPREHENSIVE RESPONSIVE STYLES ===== */
@@ -557,7 +622,7 @@ $bp = isset($basePath) ? $basePath : '';
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom sticky-top">
         <div class="container-fluid px-0">
             <a class="navbar-brand" href="<?php echo $bp; ?>index.php">
                 <i class="fas fa-feather-alt"></i> <?php echo SITE_NAME; ?>
@@ -595,6 +660,8 @@ $bp = isset($basePath) ? $basePath : '';
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/birds/male_list.php"><i class="fas fa-mars"></i> نێرەکان</a></li>
                             <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/birds/female_list.php"><i class="fas fa-venus"></i> مێیەکان</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/birds/status.php"><i class="fas fa-heartbeat"></i> دۆخی هەوێردەکان</a></li>
                         </ul>
                     </li>
                     
@@ -606,6 +673,8 @@ $bp = isset($basePath) ? $basePath : '';
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/eggs/list.php"><i class="fas fa-egg"></i> هێلکەکان</a></li>
                             <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/chicks/list.php"><i class="fas fa-kiwi-bird"></i> جوجکەکان</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="<?php echo $bp; ?>pages/production/status.php"><i class="fas fa-heartbeat"></i> دۆخی بەرهەمەکان</a></li>
                         </ul>
                     </li>
                     

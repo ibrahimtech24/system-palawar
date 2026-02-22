@@ -102,12 +102,6 @@ require_once $basePath . 'includes/header.php';
 
 <div id="reportContent">
     <?php if ($customerId > 0): ?>
-    <!-- Single Customer Report -->
-    <div class="text-center mb-4">
-        <h3>راپۆرتی کڕیار: <?php echo $customer['name']; ?></h3>
-        <p class="text-muted">بەرواری چاپ: <?php echo date('Y/m/d H:i'); ?></p>
-    </div>
-    
     <!-- Customer Info Card -->
     <div class="row mb-4">
         <div class="col-md-4">
@@ -183,7 +177,6 @@ require_once $basePath . 'includes/header.php';
                             <th>ژمارە</th>
                             <th>کۆی نرخ</th>
                             <th>بەروار</th>
-                            <th>بارودۆخ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -195,14 +188,15 @@ require_once $basePath . 'includes/header.php';
                             <td><?php echo $sale['quantity']; ?></td>
                             <td><?php echo formatMoney($sale['total_price']); ?></td>
                             <td><?php echo formatDate($sale['sale_date']); ?></td>
-                            <td><?php echo getStatusBadge($sale['payment_status']); ?></td>
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
                     <tfoot>
                         <tr class="table-dark">
-                            <td colspan="4" class="text-end"><strong>کۆی گشتی:</strong></td>
-                            <td colspan="3"><strong><?php echo formatMoney($totalSales); ?></strong></td>
+                            <td colspan="6" class="text-center py-3">
+                                <span style="font-size: 1.1rem;">کۆی گشتی:</span>
+                                <span style="font-size: 1.4rem; margin-right: 15px;"><?php echo formatMoney($totalSales); ?></span>
+                            </td>
                         </tr>
                     </tfoot>
                 </table>

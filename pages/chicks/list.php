@@ -7,23 +7,13 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'production';
 $pageTitle = 'لیستی جوجکەکان';
 
-// Get filter
-$status = isset($_GET['status']) ? $_GET['status'] : '';
-
 // Build query
 $sql = "SELECT c.*, e.quantity as egg_quantity, e.collection_date as egg_date 
         FROM chicks c 
         LEFT JOIN eggs e ON c.egg_id = e.id 
-        WHERE 1=1";
-if ($status) {
-    $sql .= " AND c.status = :status";
-}
-$sql .= " ORDER BY c.hatch_date DESC";
+        ORDER BY c.hatch_date DESC";
 
 $db->query($sql);
-if ($status) {
-    $db->bind(':status', $status);
-}
 $chicks = $db->resultSet();
 
 // Calculate totals
@@ -109,30 +99,6 @@ require_once $basePath . 'includes/header.php';
     </div>
 </div>
 
-<!-- Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label">بار</label>
-                <select name="status" class="form-select">
-                    <option value="">هەموو</option>
-                    <option value="active" <?php echo $status === 'active' ? 'selected' : ''; ?>>چالاک</option>
-                    <option value="sold" <?php echo $status === 'sold' ? 'selected' : ''; ?>>فرۆشراو</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-filter"></i> فلتەر
-                </button>
-                <a href="list.php" class="btn btn-secondary">
-                    <i class="fas fa-redo"></i> ڕیسێت
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- Data Table -->
 <div class="card">
     <div class="card-header bg-success-gradient">
@@ -150,7 +116,6 @@ require_once $basePath . 'includes/header.php';
                         <th>زیندوو</th>
                         <th>مردوو</th>
                         <th>تەمەن</th>
-                        <th>بار</th>
                         <th>کردارەکان</th>
                     </tr>
                 </thead>
@@ -169,10 +134,9 @@ require_once $basePath . 'includes/header.php';
                             </strong>
                         </td>
                         <td><?php echo $chick['quantity']; ?></td>
-                        <td><span class="text-success"><?php echo $chick['quantity'] - $chick['dead_count']; ?></span></td>
-                        <td><span class="text-danger"><?php echo $chick['dead_count']; ?></span></td>
+                        <td><span class="badge bg-success"><?php echo $chick['quantity'] - $chick['dead_count']; ?></span></td>
+                        <td><span class="badge bg-danger"><?php echo $chick['dead_count']; ?></span></td>
                         <td><?php echo calculateAge($chick['hatch_date']); ?></td>
-                        <td><?php echo getStatusBadge($chick['status']); ?></td>
                         <td>
                             <div class="btn-group">
                                 <a href="edit.php?id=<?php echo $chick['id']; ?>" class="btn btn-sm btn-outline-primary" title="دەستکاری">

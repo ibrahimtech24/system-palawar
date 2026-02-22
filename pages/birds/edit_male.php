@@ -26,18 +26,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $batchName = $_POST['batch_name'] ?? '';
     $quantity = intval($_POST['quantity'] ?? 0);
     $entryDate = $_POST['entry_date'] ?? '';
-    $status = $_POST['status'] ?? 'active';
     $notes = $_POST['notes'] ?? '';
     
     if (empty($batchName) || $quantity <= 0 || empty($entryDate)) {
         $message = 'تکایە هەموو خانەکان پڕ بکەوە';
         $messageType = 'danger';
     } else {
-        $db->query("UPDATE male_birds SET batch_name = :name, quantity = :qty, entry_date = :date, status = :status, notes = :notes WHERE id = :id");
+        $db->query("UPDATE male_birds SET batch_name = :name, quantity = :qty, entry_date = :date, notes = :notes WHERE id = :id");
         $db->bind(':name', $batchName);
         $db->bind(':qty', $quantity);
         $db->bind(':date', $entryDate);
-        $db->bind(':status', $status);
         $db->bind(':notes', $notes);
         $db->bind(':id', $id);
         
@@ -102,15 +100,6 @@ require_once $basePath . 'includes/header.php';
                         <div class="col-md-6">
                             <label class="form-label">بەرواری هاتن <span class="text-danger">*</span></label>
                             <input type="date" name="entry_date" class="form-control" value="<?php echo $bird['entry_date']; ?>" required>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">بار</label>
-                            <select name="status" class="form-select">
-                                <option value="active" <?php echo $bird['status'] == 'active' ? 'selected' : ''; ?>>چالاک</option>
-                                <option value="sold" <?php echo $bird['status'] == 'sold' ? 'selected' : ''; ?>>فرۆشراو</option>
-                                <option value="dead" <?php echo $bird['status'] == 'dead' ? 'selected' : ''; ?>>مردوو</option>
-                            </select>
                         </div>
                         
                         <div class="col-12">

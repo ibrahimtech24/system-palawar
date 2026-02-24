@@ -195,7 +195,7 @@ require_once $basePath . 'includes/header.php';
                                 <a href="edit.php?id=<?php echo $transaction['id']; ?>" class="btn btn-sm btn-outline-primary" title="دەستکاری">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="delete.php?id=<?php echo $transaction['id']; ?>" onclick="return confirm('ئایا دڵنیایت لە سڕینەوەی ئەم مامەڵەیە؟')" class="btn btn-sm btn-outline-danger" title="سڕینەوە">
+                                <a href="#" onclick="return confirmDelete('delete.php?id=<?php echo $transaction['id']; ?>', 'ئایا دڵنیایت لە سڕینەوەی ئەم مامەڵەیە؟')" class="btn btn-sm btn-outline-danger" title="سڕینەوە">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </div>

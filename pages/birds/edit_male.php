@@ -82,14 +82,14 @@ require_once $basePath . 'includes/header.php';
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header">
-                <i class="fas fa-mars"></i> دەستکاری گرووپ: <?php echo $bird['batch_name']; ?>
+                <i class="fas fa-mars"></i> دەستکاری گرووپ: <?php echo htmlspecialchars($bird['batch_name']); ?>
             </div>
             <div class="card-body">
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">ناوی گرووپ <span class="text-danger">*</span></label>
-                            <input type="text" name="batch_name" class="form-control" value="<?php echo $bird['batch_name']; ?>" required>
+                            <input type="text" name="batch_name" class="form-control" value="<?php echo htmlspecialchars($bird['batch_name']); ?>" required>
                         </div>
                         
                         <div class="col-md-6">
@@ -104,7 +104,7 @@ require_once $basePath . 'includes/header.php';
                         
                         <div class="col-12">
                             <label class="form-label">تێبینی</label>
-                            <textarea name="notes" class="form-control" rows="3"><?php echo $bird['notes']; ?></textarea>
+                            <textarea name="notes" class="form-control" rows="3"><?php echo htmlspecialchars($bird['notes'] ?? ''); ?></textarea>
                         </div>
                         
                         <div class="col-12">

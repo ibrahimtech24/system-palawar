@@ -17,12 +17,15 @@ if (!$db->single()) {
 // Build query - join with eggs and birds to get parent info
 // Only show groups that have alive chicks (quantity - dead_count > 0) and not sold
 $sql = "SELECT c.*, e.quantity as egg_quantity, e.collection_date as egg_date,
-               f.batch_name as female_batch, m.batch_name as male_batch
+               f.batch_name as female_batch, m.batch_name as male_batch,
+               cu.name as customer_name
         FROM chicks c 
         LEFT JOIN eggs e ON c.egg_id = e.id 
         LEFT JOIN female_birds f ON e.female_bird_id = f.id
         LEFT JOIN male_birds m ON e.male_bird_id = m.id
-        WHERE (c.quantity - c.dead_count) > 0 AND c.status != 'sold'
+        LEFT JOIN customers cu ON c.customer_id = cu.id
+        WHERE c.quantity > 0 AND (c.quantity - c.dead_count) > 0 AND c.status != 'sold'
+        AND (c.customer_id IS NULL OR c.customer_id = 0)
         ORDER BY c.hatch_date DESC";
 
 $db->query($sql);
@@ -72,10 +75,17 @@ require_once $basePath . 'includes/header.php';
 </div>
 <?php endif; ?>
 
-<!-- Summary Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="stat-card">
+<?php if (isset($_GET['error'])): ?>
+<div class="alert alert-danger alert-dismissible fade show">
+    <i class="fas fa-exclamation-circle"></i>
+    <?php if ($_GET['error'] == 'sales'): ?>
+        ناتوانرێت ئەم جوجکەیە بسڕدرێتەوە چونکە لە فرۆشتندا بەکارهاتووە!
+    <?php else: ?>
+        هەڵەیەک ڕوویدا
+    <?php endif; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
             <div class="icon bg-primary">
                 <i class="fas fa-kiwi-bird"></i>
             </div>
@@ -119,47 +129,55 @@ require_once $basePath . 'includes/header.php';
     <div class="card-body">
         <?php if (count($chicks) > 0): ?>
         <div class="table-responsive">
-            <table class="table data-table">
-                <thead>
+            <table class="table data-table table-hover">
+                <thead class="table-light">
                     <tr>
-                        <th>#</th>
-                        <th><i class="fas fa-venus text-danger"></i> دایک</th>
-                        <th><i class="fas fa-mars text-primary"></i> باوک</th>
-                        <th>ژمارە</th>
-                        <th>زیندوو</th>
-                        <th>مردوو</th>
-                        <th>تەمەن</th>
-                        <th>کردارەکان</th>
+                        <th class="text-center" style="width: 50px;">#</th>
+                        <th class="text-center"><i class="fas fa-venus text-danger"></i> دایک</th>
+                        <th class="text-center"><i class="fas fa-mars text-primary"></i> باوک</th>
+                        <th class="text-center">کۆی ژمارە</th>
+                        <th class="text-center">زیندوو</th>
+                        <th class="text-center">مردوو</th>
+                        <th class="text-center">تەمەن</th>
+                        <th class="text-center" style="width: 100px;">کردارەکان</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($chicks as $index => $chick): ?>
+                    <?php foreach ($chicks as $index => $chick): 
+                        $aliveCount = $chick['quantity'] - $chick['dead_count'];
+                    ?>
                     <tr>
-                        <td><?php echo $index + 1; ?></td>
-                        <td>
+                        <td class="text-center"><?php echo $index + 1; ?></td>
+                        <td class="text-center">
                             <?php if (!empty($chick['female_batch'])): ?>
-                                <span class="badge bg-danger-subtle text-danger"><?php echo $chick['female_batch']; ?></span>
+                                <span class="badge bg-danger-subtle text-danger"><?php echo htmlspecialchars($chick['female_batch']); ?></span>
                             <?php else: ?>
                                 <span class="text-muted">-</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td class="text-center">
                             <?php if (!empty($chick['male_batch'])): ?>
-                                <span class="badge bg-primary-subtle text-primary"><?php echo $chick['male_batch']; ?></span>
+                                <span class="badge bg-primary-subtle text-primary"><?php echo htmlspecialchars($chick['male_batch']); ?></span>
                             <?php else: ?>
                                 <span class="text-muted">-</span>
                             <?php endif; ?>
                         </td>
-                        <td><strong><?php echo $chick['quantity']; ?></strong></td>
-                        <td><span class="badge bg-success"><?php echo $chick['quantity'] - $chick['dead_count']; ?></span></td>
-                        <td><span class="badge bg-danger"><?php echo $chick['dead_count']; ?></span></td>
-                        <td><?php echo calculateAge($chick['hatch_date']); ?></td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="edit.php?id=<?php echo $chick['id']; ?>" class="btn btn-sm btn-outline-primary" title="دەستکاری">
+                        <td class="text-center"><strong><?php echo number_format($chick['quantity']); ?></strong></td>
+                        <td class="text-center"><span class="badge bg-success fs-6"><?php echo number_format($aliveCount); ?></span></td>
+                        <td class="text-center">
+                            <?php if ($chick['dead_count'] > 0): ?>
+                                <span class="badge bg-danger"><?php echo number_format($chick['dead_count']); ?></span>
+                            <?php else: ?>
+                                <span class="text-muted">0</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center"><?php echo calculateAge($chick['hatch_date']); ?></td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="edit.php?id=<?php echo $chick['id']; ?>" class="btn btn-outline-primary" title="دەستکاری">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="delete.php?id=<?php echo $chick['id']; ?>" onclick="return confirm('ئایا دڵنیایت لە سڕینەوەی ئەم تۆمارە؟')" class="btn btn-sm btn-outline-danger" title="سڕینەوە">
+                                <a href="#" onclick="return confirmDelete('delete.php?id=<?php echo $chick['id']; ?>', 'ئایا دڵنیایت لە سڕینەوەی ئەم تۆمارە؟')" class="btn btn-outline-danger" title="سڕینەوە">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </div>

@@ -52,6 +52,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->bind(':id', $id);
         
         if ($db->execute()) {
+            // Update related transaction amount
+            $db->query("UPDATE transactions SET amount = :amount WHERE reference_type = 'purchase' AND reference_id = :id");
+            $db->bind(':amount', $total_price);
+            $db->bind(':id', $id);
+            $db->execute();
+            
             header('Location: list.php?success=1');
             exit;
         } else {

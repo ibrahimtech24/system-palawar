@@ -6,6 +6,7 @@ require_once $basePath . 'includes/database.php';
 $id = $_GET['id'] ?? 0;
 
 if ($id > 0) {
+    // Delete only the transaction record - keep all other data
     $db->query("DELETE FROM transactions WHERE id = :id");
     $db->bind(':id', $id);
     $db->execute();

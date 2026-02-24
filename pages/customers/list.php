@@ -13,7 +13,8 @@ if (isset($_GET['delete'])) {
     $db->query("DELETE FROM customers WHERE id = :id");
     $db->bind(':id', $id);
     if ($db->execute()) {
-        setMessage('success', 'کڕیارەکە بە سەرکەوتوویی سڕایەوە');
+        header('Location: list.php?deleted=1');
+        exit;
     }
     redirect('list.php');
 }
@@ -73,32 +74,37 @@ require_once $basePath . 'includes/header.php';
     <div class="card-body">
         <?php if (count($customers) > 0): ?>
         <div class="table-responsive">
-            <table class="table data-table">
-                <thead>
+            <table class="table data-table table-hover table-borderless align-middle">
+                <thead class="table-light">
                     <tr>
-                        <th>#</th>
-                        <th>ناو</th>
-                        <th>تەلەفۆن</th>
-                        <th>ناونیشان</th>
-                        <th>تێبینی</th>
-                        <th class="no-print">کردارەکان</th>
+                        <th class="text-center" style="width: 50px;">#</th>
+                        <th class="text-center">ناو</th>
+                        <th class="text-center">تەلەفۆن</th>
+                        <th class="text-center">ناونیشان</th>
+                        <th class="text-center">تێبینی</th>
+                        <th class="text-center no-print" style="width: 130px;">کردارەکان</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($customers as $index => $customer): ?>
                     <tr>
-                        <td><?php echo $index + 1; ?></td>
-                        <td><strong><?php echo $customer['name']; ?></strong></td>
-                        <td><?php echo $customer['phone'] ?: '-'; ?></td>
-                        <td><?php echo $customer['address'] ?: '-'; ?></td>
-                        <td><?php echo $customer['notes'] ?: '-'; ?></td>
-                        <td class="no-print">
-                            <a href="<?php echo $basePath; ?>pages/reports/customers.php?id=<?php echo $customer['id']; ?>" class="btn btn-sm btn-info btn-action" title="راپۆرت">
-                                <i class="fas fa-chart-bar"></i>
-                            </a>
-                            <a href="list.php?delete=<?php echo $customer['id']; ?>" onclick="return confirm('ئایا دڵنیایت لە سڕینەوەی ئەم کڕیارە؟')" class="btn btn-sm btn-danger btn-action" title="سڕینەوە">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                        <td class="text-center"><?php echo $index + 1; ?></td>
+                        <td class="text-center"><strong><?php echo htmlspecialchars($customer['name']); ?></strong></td>
+                        <td class="text-center"><?php echo htmlspecialchars($customer['phone']) ?: '-'; ?></td>
+                        <td class="text-center"><?php echo htmlspecialchars($customer['address']) ?: '-'; ?></td>
+                        <td class="text-center"><?php echo htmlspecialchars($customer['notes']) ?: '-'; ?></td>
+                        <td class="text-center no-print">
+                            <div class="btn-group btn-group-sm">
+                                <a href="edit.php?id=<?php echo $customer['id']; ?>" class="btn btn-outline-primary" title="دەستکاری">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="<?php echo $basePath; ?>pages/reports/customers.php?id=<?php echo $customer['id']; ?>" class="btn btn-outline-info" title="راپۆرت">
+                                    <i class="fas fa-chart-bar"></i>
+                                </a>
+                                <a href="#" onclick="return confirmDelete('list.php?delete=<?php echo $customer['id']; ?>', 'ئایا دڵنیایت لە سڕینەوەی ئەم کڕیارە؟')" class="btn btn-outline-danger" title="سڕینەوە">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     <?php endforeach; ?>

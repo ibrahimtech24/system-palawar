@@ -129,7 +129,7 @@ require_once $basePath . 'includes/header.php';
                         <th>#</th>
                         <th>کۆدی فرۆشتن</th>
                         <th>کڕیار</th>
-                        <th>جۆری کالا</th>
+                        <th>جۆری بەرهەم</th>
                         <th>ژمارە</th>
                         <th>نرخی یەکە</th>
                         <th>کۆی نرخ</th>
@@ -156,7 +156,7 @@ require_once $basePath . 'includes/header.php';
                                 <a href="edit.php?id=<?php echo $sale['id']; ?>" class="btn btn-outline-primary" title="دەستکاری">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="delete.php?id=<?php echo $sale['id']; ?>" class="btn btn-outline-danger" title="سڕینەوە" onclick="return confirm('ئایا دڵنیایت لە سڕینەوەی ئەم فرۆشتنە؟');">
+                                <a href="#" onclick="return confirmDelete('delete.php?id=<?php echo $sale['id']; ?>', 'ئایا دڵنیایت لە سڕینەوەی ئەم فرۆشتنە؟')" class="btn btn-outline-danger" title="سڕینەوە">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </div>

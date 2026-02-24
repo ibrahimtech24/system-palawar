@@ -23,9 +23,27 @@ $femaleBirds = $db->resultSet();
 $db->query("SELECT SUM(quantity) as total, SUM(damaged_count) as damaged, SUM(quantity - damaged_count) as healthy FROM eggs");
 $eggsSummary = $db->single();
 
-// Get chicks summary
-$db->query("SELECT SUM(quantity) as total, SUM(dead_count) as dead, SUM(quantity - dead_count) as alive FROM chicks");
+// Get chicks summary (only ours)
+$db->query("SELECT SUM(quantity) as total, SUM(dead_count) as dead, SUM(quantity - dead_count) as alive FROM chicks WHERE (customer_id IS NULL OR customer_id = 0)");
 $chicksSummary = $db->single();
+
+// Get incubator summary
+$db->query("SELECT COUNT(*) as total_groups, 
+            SUM(egg_quantity) as total_eggs, 
+            SUM(hatched_count) as total_hatched, 
+            SUM(damaged_count) as total_damaged,
+            SUM(CASE WHEN status = 'incubating' THEN 1 ELSE 0 END) as active_count
+            FROM incubator WHERE YEAR(entry_date) = :year");
+$db->bind(':year', date('Y'));
+$incubatorSummary = $db->single();
+
+// Get active incubator items
+$db->query("SELECT i.*, c.name as customer_name 
+            FROM incubator i 
+            LEFT JOIN customers c ON i.customer_id = c.id 
+            WHERE i.status = 'incubating' 
+            ORDER BY i.expected_hatch_date ASC");
+$activeIncubator = $db->resultSet();
 
 // Calculate total inventory value
 $db->query("SELECT SUM(quantity * unit_price) as total FROM warehouse");
@@ -348,6 +366,83 @@ require_once $basePath . 'includes/header.php';
                         <div class="progress-bar bg-danger" style="width: <?php echo $deadPercent; ?>%">
                             <?php echo round($deadPercent, 1); ?>%
                         </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Incubator Summary -->
+    <div class="row g-4 mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning-gradient">
+                    <i class="fas fa-temperature-high"></i> مەفقەس - ئەمساڵ
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3 text-center">
+                        <div class="col-md-2">
+                            <h4 class="text-primary"><?php echo number_format($incubatorSummary['total_groups'] ?? 0); ?></h4>
+                            <small class="text-muted">گرووپ</small>
+                        </div>
+                        <div class="col-md-2">
+                            <h4 class="text-info"><?php echo number_format($incubatorSummary['total_eggs'] ?? 0); ?></h4>
+                            <small class="text-muted">کۆی هێلکە</small>
+                        </div>
+                        <div class="col-md-2">
+                            <h4 class="text-success"><?php echo number_format($incubatorSummary['total_hatched'] ?? 0); ?></h4>
+                            <small class="text-muted">دەرچوو</small>
+                        </div>
+                        <div class="col-md-2">
+                            <h4 class="text-danger"><?php echo number_format($incubatorSummary['total_damaged'] ?? 0); ?></h4>
+                            <small class="text-muted">خراپ</small>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-warning"><?php echo number_format($incubatorSummary['active_count'] ?? 0); ?></h4>
+                            <small class="text-muted">چالاک ئێستا</small>
+                        </div>
+                    </div>
+                    
+                    <?php if (count($activeIncubator) > 0): ?>
+                    <hr>
+                    <h6 class="mb-3"><i class="fas fa-fire text-warning"></i> مەفقەسی چالاک ئێستا</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ناوی گرووپ</th>
+                                    <th>کڕیار</th>
+                                    <th>ژمارەی هێلکە</th>
+                                    <th>بەرواری دەرچوون</th>
+                                    <th>ماوە</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($activeIncubator as $index => $inc): 
+                                    $daysLeft = (strtotime($inc['expected_hatch_date']) - time()) / 86400;
+                                    $daysLeft = max(0, ceil($daysLeft));
+                                ?>
+                                <tr>
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td><?php echo htmlspecialchars($inc['group_name']); ?></td>
+                                    <td><?php echo !empty($inc['customer_name']) ? htmlspecialchars($inc['customer_name']) : 'خۆمان'; ?></td>
+                                    <td><?php echo number_format($inc['egg_quantity']); ?></td>
+                                    <td><?php echo $inc['expected_hatch_date']; ?></td>
+                                    <td>
+                                        <?php if ($daysLeft <= 2): ?>
+                                        <span class="badge bg-danger"><?php echo $daysLeft; ?> ڕۆژ</span>
+                                        <?php elseif ($daysLeft <= 5): ?>
+                                        <span class="badge bg-warning text-dark"><?php echo $daysLeft; ?> ڕۆژ</span>
+                                        <?php else: ?>
+                                        <span class="badge bg-info"><?php echo $daysLeft; ?> ڕۆژ</span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                     <?php endif; ?>
                 </div>

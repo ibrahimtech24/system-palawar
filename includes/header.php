@@ -723,7 +723,7 @@ $bp = isset($basePath) ? $basePath : '';
                 <!-- دەرچوون -->
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link user-menu" href="<?php echo $bp; ?>logout.php" onclick="return confirm('دەرچوون؟');">
+                        <a class="nav-link user-menu" href="#" onclick="return confirmDelete('<?php echo $bp; ?>logout.php', 'ئایا دەتەوێت دەرچیت؟', 'دەرچوون');">
                             <i class="fas fa-sign-out-alt"></i> دەرچوون
                         </a>
                     </li>

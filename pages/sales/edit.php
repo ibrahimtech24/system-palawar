@@ -41,10 +41,82 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sale_date = $_POST['sale_date'] ?? date('Y-m-d');
     $notes = $_POST['notes'] ?? '';
     
-    if (empty($item_type) || $quantity <= 0 || $unit_price <= 0) {
+    if (empty($customer_id)) {
+        $message = 'تکایە کڕیارێک هەڵبژێرە';
+        $messageType = 'danger';
+    } elseif (empty($item_type) || $quantity <= 0 || $unit_price <= 0) {
         $message = 'تکایە هەموو خانەکان پڕ بکەوە';
         $messageType = 'danger';
     } else {
+        // Calculate quantity difference and adjust inventory
+        $oldQuantity = $sale['quantity'];
+        $oldItemType = $sale['item_type'];
+        $oldItemId = $sale['item_id'] ?? 0;
+        $qtyDiff = $oldQuantity - $quantity; // positive = return to stock, negative = deduct more
+        
+        // If item type changed or quantity changed, adjust inventory
+        if ($oldItemId > 0) {
+            // Return old quantity to old item
+            if ($oldItemType !== $item_type || $qtyDiff != 0) {
+                switch ($oldItemType) {
+                    case 'egg':
+                        $db->query("UPDATE eggs SET quantity = quantity + :qty WHERE id = :id");
+                        $db->bind(':qty', $oldQuantity);
+                        $db->bind(':id', $oldItemId);
+                        $db->execute();
+                        break;
+                    case 'chick':
+                        $db->query("UPDATE chicks SET quantity = quantity + :qty WHERE id = :id");
+                        $db->bind(':qty', $oldQuantity);
+                        $db->bind(':id', $oldItemId);
+                        $db->execute();
+                        break;
+                    case 'male_bird':
+                        $db->query("UPDATE male_birds SET quantity = quantity + :qty WHERE id = :id");
+                        $db->bind(':qty', $oldQuantity);
+                        $db->bind(':id', $oldItemId);
+                        $db->execute();
+                        break;
+                    case 'female_bird':
+                        $db->query("UPDATE female_birds SET quantity = quantity + :qty WHERE id = :id");
+                        $db->bind(':qty', $oldQuantity);
+                        $db->bind(':id', $oldItemId);
+                        $db->execute();
+                        break;
+                }
+            }
+        }
+        
+        // Deduct new quantity from (same or new) item
+        if ($oldItemId > 0 && ($oldItemType !== $item_type || $qtyDiff != 0)) {
+            switch ($item_type) {
+                case 'egg':
+                    $db->query("UPDATE eggs SET quantity = quantity - :qty WHERE id = :id");
+                    $db->bind(':qty', $quantity);
+                    $db->bind(':id', $oldItemId);
+                    $db->execute();
+                    break;
+                case 'chick':
+                    $db->query("UPDATE chicks SET quantity = quantity - :qty WHERE id = :id");
+                    $db->bind(':qty', $quantity);
+                    $db->bind(':id', $oldItemId);
+                    $db->execute();
+                    break;
+                case 'male_bird':
+                    $db->query("UPDATE male_birds SET quantity = quantity - :qty WHERE id = :id");
+                    $db->bind(':qty', $quantity);
+                    $db->bind(':id', $oldItemId);
+                    $db->execute();
+                    break;
+                case 'female_bird':
+                    $db->query("UPDATE female_birds SET quantity = quantity - :qty WHERE id = :id");
+                    $db->bind(':qty', $quantity);
+                    $db->bind(':id', $oldItemId);
+                    $db->execute();
+                    break;
+            }
+        }
+        
         $db->query("UPDATE sales SET customer_id = :customer_id, item_type = :item_type, quantity = :quantity, 
                     unit_price = :unit_price, total_price = :total_price, sale_date = :sale_date, notes = :notes 
                     WHERE id = :id");
@@ -58,6 +130,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->bind(':id', $id);
         
         if ($db->execute()) {
+            // Update related transaction amount
+            $db->query("UPDATE transactions SET amount = :amount WHERE reference_type = 'sale' AND reference_id = :id");
+            $db->bind(':amount', $total_price);
+            $db->bind(':id', $id);
+            $db->execute();
+            
             header('Location: list.php?success=1');
             exit;
         } else {
@@ -103,9 +181,9 @@ require_once $basePath . 'includes/header.php';
                 <form method="POST" class="needs-validation" novalidate>
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">کڕیار</label>
-                            <select name="customer_id" class="form-select">
-                                <option value="">هەڵبژێرە (ئارەزوومەندانە)</option>
+                            <label class="form-label">کڕیار <span class="text-danger">*</span></label>
+                            <select name="customer_id" class="form-select" required>
+                                <option value="">کڕیارێک هەڵبژێرە...</option>
                                 <?php foreach ($customers as $customer): ?>
                                 <option value="<?php echo $customer['id']; ?>" <?php echo $sale['customer_id'] == $customer['id'] ? 'selected' : ''; ?>><?php echo $customer['name']; ?></option>
                                 <?php endforeach; ?>

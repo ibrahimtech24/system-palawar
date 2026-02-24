@@ -7,9 +7,9 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'reports';
 $pageTitle = 'راپۆرتی مانگانە';
 
-// Get selected month/year
+// Get selected month/year - current year only
 $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
-$year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
+$year = (int)date('Y'); // Always current year
 
 $selectedDate = sprintf('%04d-%02d', $year, $month);
 
@@ -111,6 +111,18 @@ foreach ($transactions as $trans) {
 $db->query("SELECT * FROM warehouse ORDER BY item_name");
 $warehouseItems = $db->resultSet();
 
+// Incubator data this month
+$db->query("SELECT i.*, c.name as customer_name 
+            FROM incubator i 
+            LEFT JOIN customers c ON i.customer_id = c.id 
+            WHERE DATE_FORMAT(i.entry_date, '%Y-%m') = :date 
+            ORDER BY i.entry_date DESC");
+$db->bind(':date', $selectedDate);
+$incubatorItems = $db->resultSet();
+$totalIncubatorEggs = array_sum(array_column($incubatorItems, 'egg_quantity'));
+$totalHatched = array_sum(array_column($incubatorItems, 'hatched_count'));
+$totalDamaged = array_sum(array_column($incubatorItems, 'damaged_count'));
+
 require_once $basePath . 'includes/header.php';
 ?>
 
@@ -184,9 +196,8 @@ require_once $basePath . 'includes/header.php';
             <div class="col-md-3">
                 <label class="form-label">ساڵ</label>
                 <select name="year" class="form-select">
-                    <?php for ($y = date('Y'); $y >= date('Y') - 5; $y--): ?>
-                    <option value="<?php echo $y; ?>" <?php echo $year == $y ? 'selected' : ''; ?>><?php echo $y; ?></option>
-                    <?php endfor; ?>
+                    <?php $currentYear = (int)date('Y'); ?>
+                    <option value="<?php echo $currentYear; ?>" <?php echo $year == $currentYear ? 'selected' : ''; ?>><?php echo $currentYear; ?></option>
                 </select>
             </div>
             <div class="col-md-3">
@@ -665,6 +676,86 @@ require_once $basePath . 'includes/header.php';
                     <div class="empty-state">
                         <i class="fas fa-exchange-alt"></i>
                         <p>هیچ مامەڵەیەک لەم مانگەدا نیە</p>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Incubator -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning-gradient">
+                    <i class="fas fa-temperature-high"></i> مەفقەس (<?php echo count($incubatorItems); ?>)
+                </div>
+                <div class="card-body">
+                    <?php if (count($incubatorItems) > 0): ?>
+                    <!-- Incubator Summary -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4 text-center">
+                            <h4 class="text-primary"><?php echo number_format($totalIncubatorEggs); ?></h4>
+                            <small class="text-muted">کۆی هێلکە لە مەفقەس</small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h4 class="text-success"><?php echo number_format($totalHatched); ?></h4>
+                            <small class="text-muted">دەرچوو</small>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h4 class="text-danger"><?php echo number_format($totalDamaged); ?></h4>
+                            <small class="text-muted">خراپ/تەلەف</small>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>ناوی گرووپ</th>
+                                    <th>کڕیار</th>
+                                    <th>ژمارەی هێلکە</th>
+                                    <th>دەرچوو</th>
+                                    <th>خراپ</th>
+                                    <th>دۆخ</th>
+                                    <th>بەرواری دەستپێک</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($incubatorItems as $index => $inc): ?>
+                                <tr>
+                                    <td><?php echo $index + 1; ?></td>
+                                    <td><?php echo htmlspecialchars($inc['group_name']); ?></td>
+                                    <td><?php echo !empty($inc['customer_name']) ? htmlspecialchars($inc['customer_name']) : 'خۆمان'; ?></td>
+                                    <td><?php echo number_format($inc['egg_quantity']); ?></td>
+                                    <td><span class="badge bg-success"><?php echo number_format($inc['hatched_count']); ?></span></td>
+                                    <td><span class="badge bg-danger"><?php echo number_format($inc['damaged_count']); ?></span></td>
+                                    <td>
+                                        <?php if ($inc['status'] == 'incubating'): ?>
+                                        <span class="badge bg-warning text-dark">چاوەڕوانی</span>
+                                        <?php else: ?>
+                                        <span class="badge bg-success">دەرچووە</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo $inc['entry_date']; ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-warning">
+                                    <th colspan="3">کۆ</th>
+                                    <th><?php echo number_format($totalIncubatorEggs); ?></th>
+                                    <th><?php echo number_format($totalHatched); ?></th>
+                                    <th><?php echo number_format($totalDamaged); ?></th>
+                                    <th colspan="2"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <?php else: ?>
+                    <div class="empty-state">
+                        <i class="fas fa-temperature-high"></i>
+                        <p>هیچ مەفقەسێک لەم مانگەدا نیە</p>
                     </div>
                     <?php endif; ?>
                 </div>

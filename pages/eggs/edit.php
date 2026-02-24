@@ -148,7 +148,7 @@ require_once $basePath . 'includes/header.php';
                         
                         <div class="col-12">
                             <label class="form-label">تێبینی</label>
-                            <textarea name="notes" class="form-control" rows="3"><?php echo $egg['notes']; ?></textarea>
+                            <textarea name="notes" class="form-control" rows="3"><?php echo htmlspecialchars($egg['notes'] ?? ''); ?></textarea>
                         </div>
                     </div>
                     

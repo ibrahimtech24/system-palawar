@@ -7,9 +7,13 @@ require_once $basePath . 'includes/functions.php';
 $currentPage = 'reports';
 $pageTitle = 'راپۆرتی فرۆشتن';
 
-// Get date range
-$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : date('Y-m-01');
+// Get date range - current year only
+$currentYear = date('Y');
+$startDate = isset($_GET['start_date']) ? $_GET['start_date'] : $currentYear . '-01-01';
 $endDate = isset($_GET['end_date']) ? $_GET['end_date'] : date('Y-m-d');
+
+// Enforce current year limits
+if ($startDate < $currentYear . '-01-01') $startDate = $currentYear . '-01-01';
 
 // Get sales data
 $db->query("SELECT s.*, c.name as customer_name 

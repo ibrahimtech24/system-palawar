@@ -155,6 +155,32 @@ class Database {
         
         $this->conn->exec($sql);
         
+        // Create incubator table
+        $this->conn->exec("
+        CREATE TABLE IF NOT EXISTS incubator (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            group_name VARCHAR(255) NOT NULL,
+            customer_id INT,
+            egg_id INT,
+            egg_quantity INT NOT NULL DEFAULT 0,
+            entry_date DATE NOT NULL,
+            expected_hatch_date DATE NOT NULL,
+            status ENUM('incubating','hatched') DEFAULT 'incubating',
+            hatched_count INT DEFAULT 0,
+            damaged_count INT DEFAULT 0,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ");
+        
+        // Add customer_id column to incubator table if not exists
+        try {
+            $this->conn->exec("ALTER TABLE incubator ADD COLUMN customer_id INT AFTER group_name");
+        } catch (PDOException $e) {
+            // Column already exists, ignore
+        }
+        
         // Add egg_id column to chicks table if it doesn't exist
         try {
             $this->conn->exec("ALTER TABLE chicks ADD COLUMN egg_id INT AFTER batch_name");
@@ -167,6 +193,20 @@ class Database {
             $this->conn->exec("ALTER TABLE chicks MODIFY COLUMN batch_name VARCHAR(255) DEFAULT ''");
         } catch (PDOException $e) {
             // Already modified, ignore
+        }
+        
+        // Add incubator_id column to chicks table if not exists
+        try {
+            $this->conn->exec("ALTER TABLE chicks ADD COLUMN incubator_id INT AFTER egg_id");
+        } catch (PDOException $e) {
+            // Column already exists, ignore
+        }
+        
+        // Add customer_id column to chicks table if not exists
+        try {
+            $this->conn->exec("ALTER TABLE chicks ADD COLUMN customer_id INT AFTER incubator_id");
+        } catch (PDOException $e) {
+            // Column already exists, ignore
         }
     }
     

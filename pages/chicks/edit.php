@@ -132,7 +132,7 @@ require_once $basePath . 'includes/header.php';
                         
                         <div class="col-12">
                             <label class="form-label">تێبینی</label>
-                            <textarea name="notes" class="form-control" rows="3"><?php echo $chick['notes']; ?></textarea>
+                            <textarea name="notes" class="form-control" rows="3"><?php echo htmlspecialchars($chick['notes'] ?? ''); ?></textarea>
                         </div>
                         
                         <div class="col-12">

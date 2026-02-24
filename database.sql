@@ -161,6 +161,24 @@ CREATE TABLE IF NOT EXISTS transactions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- جەدوەلی مەفقەس (Incubator)
+CREATE TABLE IF NOT EXISTS incubator (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    group_name VARCHAR(255) NOT NULL,
+    egg_id INT,
+    customer_id INT,
+    egg_quantity INT NOT NULL DEFAULT 0,
+    entry_date DATE NOT NULL,
+    expected_hatch_date DATE NOT NULL,
+    status ENUM('incubating','hatched') DEFAULT 'incubating',
+    hatched_count INT DEFAULT 0,
+    damaged_count INT DEFAULT 0,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Insert sample data
 INSERT INTO customers (name, phone, address) VALUES 
 ('ئەحمەد محەمەد', '07501234567', 'هەولێر'),

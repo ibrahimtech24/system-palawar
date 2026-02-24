@@ -65,17 +65,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Get chicks data
+// Get chicks data (only active ones)
 $db->query("SELECT c.*, e.collection_date as egg_date 
             FROM chicks c 
             LEFT JOIN eggs e ON c.egg_id = e.id 
+            WHERE c.quantity > 0 AND (c.quantity - c.dead_count) > 0 AND c.status != 'sold'
             ORDER BY c.hatch_date DESC");
 $chicks = $db->resultSet();
 
-// Get eggs data
-$db->query("SELECT e.*, f.batch_name as female_batch 
+// Get eggs data (only active ones with healthy eggs remaining)
+$db->query("SELECT e.*, f.batch_name as female_batch, m.batch_name as male_batch
             FROM eggs e 
             LEFT JOIN female_birds f ON e.female_bird_id = f.id 
+            LEFT JOIN male_birds m ON e.male_bird_id = m.id
+            WHERE e.quantity > 0 AND (e.quantity - e.damaged_count) > 0
             ORDER BY e.collection_date DESC");
 $eggs = $db->resultSet();
 

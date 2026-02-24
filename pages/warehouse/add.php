@@ -87,20 +87,14 @@ require_once $basePath . 'includes/header.php';
                             <input type="text" name="unit" class="form-control" placeholder="کیلۆ، دانە، بەستە..." required>
                         </div>
                         
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">ژمارە <span class="text-danger">*</span></label>
                             <input type="number" name="quantity" class="form-control" min="0" required>
                         </div>
                         
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label class="form-label">نرخی یەکە (<?php echo CURRENCY; ?>)</label>
                             <input type="number" name="unit_price" class="form-control" min="0" step="0.01">
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <label class="form-label">کەمترین ژمارە</label>
-                            <input type="number" name="min_quantity" class="form-control" min="0" value="0">
-                            <small class="text-muted">ئاگاداری دەدرێت کاتێک ژمارە کەم دەبێت</small>
                         </div>
                         
                         <div class="col-12">

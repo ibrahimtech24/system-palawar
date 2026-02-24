@@ -20,7 +20,7 @@ $db->query("SELECT e.*, f.batch_name as female_batch, m.batch_name as male_batch
             FROM eggs e 
             LEFT JOIN female_birds f ON e.female_bird_id = f.id 
             LEFT JOIN male_birds m ON e.male_bird_id = m.id 
-            WHERE (e.quantity - e.damaged_count) > 0
+            WHERE e.quantity > 0 AND (e.quantity - e.damaged_count) > 0
             ORDER BY e.collection_date DESC");
 $eggs = $db->resultSet();
 
@@ -68,11 +68,19 @@ require_once $basePath . 'includes/header.php';
 </div>
 <?php endif; ?>
 
-<!-- Summary Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="stat-card">
-            <div class="icon bg-primary">
+<?php if (isset($_GET['error'])): ?>
+<div class="alert alert-danger alert-dismissible fade show">
+    <i class="fas fa-exclamation-circle"></i>
+    <?php if ($_GET['error'] == 'incubator'): ?>
+        ناتوانرێت ئەم هێلکەیە بسڕدرێتەوە چونکە لە مەفقەسدایە!
+    <?php elseif ($_GET['error'] == 'sales'): ?>
+        ناتوانرێت ئەم هێلکەیە بسڕدرێتەوە چونکە لە فرۆشتندا بەکارهاتووە!
+    <?php else: ?>
+        هەڵەیەک ڕوویدا
+    <?php endif; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
                 <i class="fas fa-egg"></i>
             </div>
             <div class="info">
@@ -115,47 +123,55 @@ require_once $basePath . 'includes/header.php';
     <div class="card-body">
         <?php if (count($eggs) > 0): ?>
         <div class="table-responsive">
-            <table class="table data-table">
-                <thead>
+            <table class="table data-table table-hover">
+                <thead class="table-light">
                     <tr>
-                        <th>#</th>
-                        <th><i class="fas fa-venus text-danger"></i> دایک</th>
-                        <th><i class="fas fa-mars text-primary"></i> باوک</th>
-                        <th>ژمارە</th>
-                        <th>ساغ</th>
-                        <th>خراپ</th>
-                        <th>بەروار</th>
-                        <th>کردارەکان</th>
+                        <th class="text-center" style="width: 50px;">#</th>
+                        <th class="text-center"><i class="fas fa-venus text-danger"></i> دایک</th>
+                        <th class="text-center"><i class="fas fa-mars text-primary"></i> باوک</th>
+                        <th class="text-center">کۆی ژمارە</th>
+                        <th class="text-center">ساغ</th>
+                        <th class="text-center">خراپ</th>
+                        <th class="text-center">بەرواری کۆکردنەوە</th>
+                        <th class="text-center" style="width: 100px;">کردارەکان</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($eggs as $index => $egg): ?>
+                    <?php foreach ($eggs as $index => $egg): 
+                        $healthyCount = $egg['quantity'] - $egg['damaged_count'];
+                    ?>
                     <tr>
-                        <td><?php echo $index + 1; ?></td>
-                        <td>
+                        <td class="text-center"><?php echo $index + 1; ?></td>
+                        <td class="text-center">
                             <?php if ($egg['female_batch']): ?>
-                                <span class="badge bg-danger-subtle text-danger"><?php echo $egg['female_batch']; ?></span>
+                                <span class="badge bg-danger-subtle text-danger"><?php echo htmlspecialchars($egg['female_batch']); ?></span>
                             <?php else: ?>
                                 <span class="text-muted">-</span>
                             <?php endif; ?>
                         </td>
-                        <td>
+                        <td class="text-center">
                             <?php if ($egg['male_batch']): ?>
-                                <span class="badge bg-primary-subtle text-primary"><?php echo $egg['male_batch']; ?></span>
+                                <span class="badge bg-primary-subtle text-primary"><?php echo htmlspecialchars($egg['male_batch']); ?></span>
                             <?php else: ?>
                                 <span class="text-muted">-</span>
                             <?php endif; ?>
                         </td>
-                        <td><strong><?php echo $egg['quantity']; ?></strong></td>
-                        <td><span class="badge bg-success"><?php echo $egg['quantity'] - $egg['damaged_count']; ?></span></td>
-                        <td><span class="badge bg-warning"><?php echo $egg['damaged_count']; ?></span></td>
-                        <td><?php echo formatDate($egg['collection_date']); ?></td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="edit.php?id=<?php echo $egg['id']; ?>" class="btn btn-sm btn-outline-primary" title="دەستکاری">
+                        <td class="text-center"><strong><?php echo number_format($egg['quantity']); ?></strong></td>
+                        <td class="text-center"><span class="badge bg-success fs-6"><?php echo number_format($healthyCount); ?></span></td>
+                        <td class="text-center">
+                            <?php if ($egg['damaged_count'] > 0): ?>
+                                <span class="badge bg-warning text-dark"><?php echo number_format($egg['damaged_count']); ?></span>
+                            <?php else: ?>
+                                <span class="text-muted">0</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center"><?php echo formatDate($egg['collection_date']); ?></td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm">
+                                <a href="edit.php?id=<?php echo $egg['id']; ?>" class="btn btn-outline-primary" title="دەستکاری">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="delete.php?id=<?php echo $egg['id']; ?>" onclick="return confirm('ئایا دڵنیایت لە سڕینەوەی ئەم تۆمارە؟')" class="btn btn-sm btn-outline-danger" title="سڕینەوە">
+                                <a href="#" onclick="return confirmDelete('delete.php?id=<?php echo $egg['id']; ?>', 'ئایا دڵنیایت لە سڕینەوەی ئەم تۆمارە؟')" class="btn btn-outline-danger" title="سڕینەوە">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </div>

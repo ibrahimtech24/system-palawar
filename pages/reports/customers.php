@@ -30,6 +30,13 @@ if ($customerId > 0) {
     $db->bind(':id', $customerId);
     $customerSales = $db->resultSet();
     
+    // Get customer's incubator records
+    $db->query("SELECT * FROM incubator WHERE customer_id = :id ORDER BY entry_date DESC");
+    $db->bind(':id', $customerId);
+    $customerIncubator = $db->resultSet();
+    $totalIncubatorEggs = array_sum(array_column($customerIncubator, 'egg_quantity'));
+    $totalIncubatorHatched = array_sum(array_column($customerIncubator, 'hatched_count'));
+    
     // Calculate stats
     $totalSales = array_sum(array_column($customerSales, 'total_price'));
     $salesCount = count($customerSales);
@@ -147,6 +154,96 @@ require_once $basePath . 'includes/header.php';
             </div>
         </div>
     </div>
+    
+    <!-- Incubator Info -->
+    <?php if (count($customerIncubator) > 0): ?>
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="stat-card h-100">
+                <div class="icon bg-warning">
+                    <i class="fas fa-temperature-high"></i>
+                </div>
+                <div class="info">
+                    <h3><?php echo count($customerIncubator); ?></h3>
+                    <p>جار مەفقەس</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card h-100">
+                <div class="icon bg-info">
+                    <i class="fas fa-egg"></i>
+                </div>
+                <div class="info">
+                    <h3><?php echo number_format($totalIncubatorEggs); ?></h3>
+                    <p>کۆی هێلکەی مەفقەس</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card h-100">
+                <div class="icon bg-success">
+                    <i class="fas fa-kiwi-bird"></i>
+                </div>
+                <div class="info">
+                    <h3><?php echo number_format($totalIncubatorHatched); ?></h3>
+                    <p>کۆی جوجکەی دەرچوو</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-warning-gradient">
+            <i class="fas fa-temperature-high"></i> مێژووی مەفقەس
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>ناوی گرووپ</th>
+                            <th>ژمارەی هێلکە</th>
+                            <th>دەرچوو</th>
+                            <th>خراپ</th>
+                            <th>دۆخ</th>
+                            <th>بەروار</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($customerIncubator as $index => $inc): ?>
+                        <tr>
+                            <td><?php echo $index + 1; ?></td>
+                            <td><?php echo htmlspecialchars($inc['group_name']); ?></td>
+                            <td><?php echo number_format($inc['egg_quantity']); ?></td>
+                            <td><span class="badge bg-success"><?php echo number_format($inc['hatched_count']); ?></span></td>
+                            <td><span class="badge bg-danger"><?php echo number_format($inc['damaged_count']); ?></span></td>
+                            <td>
+                                <?php if ($inc['status'] == 'incubating'): ?>
+                                <span class="badge bg-warning text-dark">چاوەڕوانی</span>
+                                <?php else: ?>
+                                <span class="badge bg-success">دەرچووە</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo $inc['entry_date']; ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-warning">
+                            <th colspan="2">کۆ</th>
+                            <th><?php echo number_format($totalIncubatorEggs); ?></th>
+                            <th><?php echo number_format($totalIncubatorHatched); ?></th>
+                            <th><?php echo number_format(array_sum(array_column($customerIncubator, 'damaged_count'))); ?></th>
+                            <th colspan="2"></th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
     
     <!-- Monthly Chart -->
     <div class="card mb-4">

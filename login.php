@@ -13,7 +13,7 @@ $error = '';
 // Admin credentials (you can change these)
 define('ADMIN_EMAIL', 'basir@basir.com');
 define('ADMIN_PASSWORD', '123456');
-
+ 
 // Handle login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         * {
             font-family: 'Noto Sans Arabic', sans-serif;
         }
-        
+         
         body {
             min-height: 100vh;
             display: flex;
@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        
+         
         .login-header {
             background: linear-gradient(135deg, #059669 0%, #34d399 100%);
             padding: 50px 30px;

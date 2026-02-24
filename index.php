@@ -7,16 +7,16 @@ $currentPage = 'home';
 $pageTitle = 'داشبۆرد';
 
 // Get statistics
-// Male birds count
-$db->query("SELECT COUNT(*) as count FROM male_birds WHERE status = 'active'");
-$maleBirdsCount = $db->single()['count'];
+// Male birds count - sum of quantities minus dead
+$db->query("SELECT SUM(quantity - COALESCE(dead_count, 0)) as total FROM male_birds WHERE status = 'active'");
+$maleBirdsCount = $db->single()['total'] ?? 0;
 
-// Female birds count
-$db->query("SELECT COUNT(*) as count FROM female_birds WHERE status = 'active'");
-$femaleBirdsCount = $db->single()['count'];
+// Female birds count - sum of quantities minus dead
+$db->query("SELECT SUM(quantity - COALESCE(dead_count, 0)) as total FROM female_birds WHERE status = 'active'");
+$femaleBirdsCount = $db->single()['total'] ?? 0;
 
-// Eggs count
-$db->query("SELECT SUM(quantity - damaged_count) as total FROM eggs");
+// Eggs count - total eggs (matching eggs list)
+$db->query("SELECT SUM(quantity) as total FROM eggs WHERE quantity > 0 AND (quantity - damaged_count) > 0");
 $eggsCount = $db->single()['total'] ?? 0;
 
 // Chicks count
@@ -38,6 +38,18 @@ $customersCount = $db->single()['count'];
 // Total warehouse items
 $db->query("SELECT COUNT(*) as count FROM warehouse");
 $warehouseCount = $db->single()['count'];
+
+// Incubator stats
+$db->query("SELECT SUM(egg_quantity) as total FROM incubator WHERE status = 'incubating'");
+$incubatingCount = $db->single()['total'] ?? 0;
+
+// Get incubator items ready to hatch (today or past due)
+$db->query("SELECT COUNT(*) as count FROM incubator WHERE status = 'incubating' AND expected_hatch_date <= CURDATE()");
+$readyToHatchCount = $db->single()['count'] ?? 0;
+
+// Active incubator groups for dashboard display
+$db->query("SELECT i.*, cu.name as customer_name FROM incubator i LEFT JOIN customers cu ON i.customer_id = cu.id WHERE i.status = 'incubating' ORDER BY i.expected_hatch_date ASC LIMIT 6");
+$activeIncubatorItems = $db->resultSet();
 
 // Recent sales
 $db->query("SELECT s.*, c.name as customer_name FROM sales s LEFT JOIN customers c ON s.customer_id = c.id ORDER BY s.sale_date DESC LIMIT 5");
@@ -183,9 +195,69 @@ setInterval(updateClock, 1000);
 updateClock(); // Initial call
 </script>
 
+<!-- Incubator Active Groups -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #f97316, #ea580c); color: white;">
+        <span><i class="fas fa-fire"></i> مەفقەس - گرووپە چالاکەکان</span>
+        <div>
+            <a href="pages/incubator/add.php" class="btn btn-sm btn-light me-1"><i class="fas fa-plus"></i> دانانەوە</a>
+            <a href="pages/incubator/list.php" class="btn btn-sm btn-outline-light"><i class="fas fa-list"></i> هەموو</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <?php if (count($activeIncubatorItems) > 0): ?>
+        <div class="row g-3">
+            <?php foreach ($activeIncubatorItems as $incItem): 
+                $entryD = new DateTime($incItem['entry_date']);
+                $hatchD = new DateTime($incItem['expected_hatch_date']);
+                $todayD = new DateTime();
+                $dLeft = (int)$todayD->diff($hatchD)->format('%r%a');
+                $prog = min(100, max(0, ((17 - max(0, $dLeft)) / 17) * 100));
+                $pColor = $dLeft <= 0 ? 'success' : ($dLeft <= 3 ? 'warning' : 'info');
+            ?>
+            <div class="col-lg-4 col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong><i class="fas fa-egg text-warning"></i> <?php echo htmlspecialchars($incItem['group_name']); ?></strong>
+                        <span class="badge bg-<?php echo $pColor; ?>">
+                            <?php echo $dLeft <= 0 ? 'ئامادەیە!' : $dLeft . ' ڕۆژ'; ?>
+                        </span>
+                    </div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-<?php echo $pColor; ?> progress-bar-striped progress-bar-animated" style="width: <?php echo $prog; ?>%"></div>
+                    </div>
+                    <small class="text-muted">
+                        <?php echo number_format($incItem['egg_quantity']); ?> هێلکە | 
+                        دەرچوون: <?php echo formatDate($incItem['expected_hatch_date']); ?>
+                        <?php if ($incItem['customer_name']): ?><br><i class="fas fa-user-tie"></i> <?php echo htmlspecialchars($incItem['customer_name']); ?><?php endif; ?>
+                    </small>
+                    <?php if ($dLeft <= 0): ?>
+                    <div class="mt-2">
+                        <a href="pages/incubator/hatch.php?id=<?php echo $incItem['id']; ?>" class="btn btn-success btn-sm w-100">
+                            <i class="fas fa-kiwi-bird"></i> هەڵاتن
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <?php else: ?>
+        <div class="text-center py-4">
+            <i class="fas fa-temperature-high" style="font-size: 3rem; color: #f9731650;"></i>
+            <h5 class="mt-3 text-muted">هیچ هێلکەیەک لە مەفقەسدا نیە</h5>
+            <p class="text-muted">بۆ دانانەوەی هێلکە لە مەفقەس، کلیک لە دوگمەی خوارەوە بکە</p>
+            <a href="pages/incubator/add.php" class="btn btn-primary">
+                <i class="fas fa-plus"></i> دانانەوەی هێلکە لە مەفقەس
+            </a>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
 <!-- Statistics Cards -->
 <div class="row g-4 mb-4">
-    <div class="col-lg-3 col-md-6">
+    <div class="col-xl col-md-6">
         <div class="stat-card">
             <div class="icon bg-primary">
                 <i class="fas fa-mars"></i>
@@ -197,7 +269,7 @@ updateClock(); // Initial call
         </div>
     </div>
     
-    <div class="col-lg-3 col-md-6">
+    <div class="col-xl col-md-6">
         <div class="stat-card">
             <div class="icon bg-danger">
                 <i class="fas fa-venus"></i>
@@ -209,7 +281,7 @@ updateClock(); // Initial call
         </div>
     </div>
     
-    <div class="col-lg-3 col-md-6">
+    <div class="col-xl col-md-6">
         <div class="stat-card">
             <div class="icon bg-warning">
                 <i class="fas fa-egg"></i>
@@ -221,7 +293,22 @@ updateClock(); // Initial call
         </div>
     </div>
     
-    <div class="col-lg-3 col-md-6">
+    <div class="col-xl col-md-6">
+        <div class="stat-card">
+            <div class="icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
+                <i class="fas fa-temperature-high"></i>
+            </div>
+            <div class="info">
+                <h3><?php echo number_format($incubatingCount); ?></h3>
+                <p>مەفقەس</p>
+                <?php if ($readyToHatchCount > 0): ?>
+                <small class="text-success fw-bold"><i class="fas fa-bell"></i> <?php echo $readyToHatchCount; ?> ئامادەی هەڵاتن</small>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl col-md-6">
         <div class="stat-card">
             <div class="icon bg-info">
                 <i class="fas fa-kiwi-bird"></i>
@@ -321,8 +408,9 @@ updateClock(); // Initial call
     <!-- Recent Sales -->
     <div class="col-lg-6">
         <div class="card">
-            <div class="card-header">
-                <i class="fas fa-cash-register"></i> فرۆشتنە دوایینەکان
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-cash-register"></i> فرۆشتنە دوایینەکان</span>
+                <a href="pages/sales/list.php" class="btn btn-sm btn-success"><i class="fas fa-list"></i> هەموو</a>
             </div>
             <div class="card-body">
                 <?php if (count($recentSales) > 0): ?>
@@ -331,6 +419,7 @@ updateClock(); // Initial call
                         <thead>
                             <tr>
                                 <th>کۆد</th>
+                                <th>جۆر</th>
                                 <th>کڕیار</th>
                                 <th>بڕ</th>
                                 <th>بەروار</th>
@@ -340,8 +429,9 @@ updateClock(); // Initial call
                             <?php foreach ($recentSales as $sale): ?>
                             <tr>
                                 <td><code><?php echo $sale['sale_code']; ?></code></td>
+                                <td><span class="badge bg-primary"><?php echo getItemTypeName($sale['item_type']); ?></span></td>
                                 <td><?php echo $sale['customer_name'] ?? 'نەزانراو'; ?></td>
-                                <td><?php echo formatMoney($sale['total_price']); ?></td>
+                                <td class="text-success fw-bold"><?php echo formatMoney($sale['total_price']); ?></td>
                                 <td><?php echo formatDate($sale['sale_date']); ?></td>
                             </tr>
                             <?php endforeach; ?>
@@ -362,8 +452,9 @@ updateClock(); // Initial call
     <!-- Recent Transactions -->
     <div class="col-lg-6">
         <div class="card">
-            <div class="card-header">
-                <i class="fas fa-history"></i> مامەڵە دوایینەکان
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-history"></i> مامەڵە دوایینەکان</span>
+                <a href="pages/transactions/list.php" class="btn btn-sm btn-primary"><i class="fas fa-list"></i> هەموو</a>
             </div>
             <div class="card-body">
                 <?php if (count($recentTransactions) > 0): ?>
@@ -372,7 +463,7 @@ updateClock(); // Initial call
                         <thead>
                             <tr>
                                 <th>جۆر</th>
-                                <th>وەسف</th>
+                                <th>پۆل</th>
                                 <th>بڕ</th>
                                 <th>بەروار</th>
                             </tr>
@@ -381,18 +472,16 @@ updateClock(); // Initial call
                             <?php foreach ($recentTransactions as $trans): ?>
                             <tr>
                                 <td>
-                                    <?php if ($trans['transaction_type'] === 'sale'): ?>
-                                    <span class="badge bg-success">فرۆشتن</span>
-                                    <?php elseif ($trans['transaction_type'] === 'purchase'): ?>
-                                    <span class="badge bg-danger">کڕین</span>
-                                    <?php elseif ($trans['transaction_type'] === 'income'): ?>
-                                    <span class="badge bg-info">داهات</span>
+                                    <?php if ($trans['transaction_type'] === 'income'): ?>
+                                    <span class="badge bg-success"><i class="fas fa-arrow-down"></i> داهات</span>
                                     <?php else: ?>
-                                    <span class="badge bg-warning">خەرجی</span>
+                                    <span class="badge bg-danger"><i class="fas fa-arrow-up"></i> خەرجی</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo $trans['description'] ?? '-'; ?></td>
-                                <td><?php echo formatMoney($trans['amount']); ?></td>
+                                <td><?php echo $trans['category'] ?? '-'; ?></td>
+                                <td class="<?php echo $trans['transaction_type'] === 'income' ? 'text-success' : 'text-danger'; ?> fw-bold">
+                                    <?php echo $trans['transaction_type'] === 'income' ? '+' : '-'; ?><?php echo formatMoney($trans['amount']); ?>
+                                </td>
                                 <td><?php echo formatDate($trans['transaction_date']); ?></td>
                             </tr>
                             <?php endforeach; ?>
